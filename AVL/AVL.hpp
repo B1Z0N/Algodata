@@ -218,13 +218,12 @@ private:
 	/**
 	 * Binary tree node class
 	 */
-	class Node
+	struct Node
 	{
 		T value;	 ///< Value stored in this node
 		Node *left;  ///< Left subtree pointer
 		Node *right; ///< Right subtree pointer
 
-	public:	
 		Node( const T& value, Node *left, Node* right )
 			: value{ value }, left{ left }, right{ right } { }
 
@@ -237,91 +236,176 @@ private:
 	/**
 	 * Insert item to node, keep it balanced
 	 */
-	void insert( const T& value, Node*& nd )
+	void insert( const T& value, Node* nd )
 	{
+		Node *head {nd};
+		
+		while( nd )
+		{
+			prev = nd;
+			if( nd->value < value )
+			{
+				nd = nd->right;
+			}
+			else if( nd->value > value )
+			{
+				nd = nd->left;
+			}
+			else
+				;	// Duplicate
+		}
 
+		nd = new Node { value, nullptr, nullptr };
+
+		balance( head );
 	}
 
 	/**
 	 * Find and remove value from tree, keep it balanced
 	 */
-	void remove( const T& value, Node*& nd )
+	void remove( const T& value, Node*& nd ) noexcept
 	{
-		remove( value, root );
+
 	}
 
 	/**
 	 * Remove all elements from tree
 	 */
- 	void erase( Node*& nd )
+ 	void erase( Node*& nd ) noexcept
  	{
- 		erase( root );
+ 		if( nd )
+ 		{
+ 			erase( nd->left );
+ 			erase( nd->right );
+ 			delete nd;
+ 		}
+
+ 		nd = nullptr;
  	}
 
  	/**
  	 * Return true if value is in the tree
  	 */
- 	bool contains( const T& value, Node*& nd )
+ 	bool contains( const T& value, Node*& nd ) const noexcept
  	{
- 		return contains( value, root );
+ 		if( !nd ) 
+ 		{
+ 			return false;
+ 		}
+ 		else if( value > nd->value )
+ 		{
+ 			return contains( value, nd->right );
+ 		}
+ 		else if( value < nd->value )
+ 		{
+ 			return contains( value, nd ->left );
+ 		}
+ 		else 
+ 		{
+ 			return true;
+ 		}
  	}
 
  	/**
- 	 * Return pointer to the minimal item of the tree
+ 	 * Return pointer to the node with the minimal item
  	 */
-	T find_min( Node*& nd )
+	Node* find_min( Node*& nd ) const noexcept
 	{
-		
+		while( nd->left )
+		{
+			nd = nd->left;
+		}
+
+		return nd;
 	}
 
  	/**
- 	 * Return pointer to the maximal item of the tree
+ 	 * Return pointer to the node with the maximal item
  	 */
-	T find_max( Node*& nd )
+	Node* find_max( Node*& nd ) const noexcept
 	{
+		while( nd->right )
+		{
+			nd = nd->right;
+		}
 
+		return nd;
 	}
 
 	/**
 	 * Return height of the tree
 	 */
-	size_t height( Node*& nd, Node*& nd )
+	size_t height( Node* nd ) const noexcept
 	{
+		if( !nd ) return 0;
 
+		return std::max( height( nd->left  ), 
+						 height( nd->right ) ) + 1;
 	}
 
 	/**
 	 * Return number of items in the tree
 	 */
-	size_t size( Node*& nd )
+	size_t size( Node*& nd ) const noexcept
 	{
+		if( !nd ) return 0;
 
+		return size( nd->left ) + size( nd->right ) + 1;
 	}
 
 	/**
 	 * Call f on each item in this order: Parent-Left-Right
 	 */
 	template <typename Func>
-	void preorder( Func f, Node*& nd )
+	void preorder( Func&& f, Node*& nd ) const
 	{
+		if( !nd ) return;
 
+		f( nd->value );
+		preorder( std::forward<Func>( f ), nd->left );
+		preorder( std::forward<Func>( f ), nd->right );
 	}
 
 	/**
 	 * Call f on each item in this order: Left-Parent-Right
 	 */
 	template <typename Func>
-	void inorder( Func f )
+	void inorder( Func&& f, Node*& nd ) const
 	{
+		if( !nd ) return;
+
+		inorder( std::forward<Func>( f ), nd->left );
+		f( nd->value );
+		inorder( std::forward<Func>( f ), nd->right );
 	}
 
 	/**
 	 * Call f on each item in this order: Left-Right-Parent
 	 */
 	template <typename Func>
-	void postorder( Func f )
+	void postorder( Func&& f, Node*& nd ) const
 	{
-		postorder( f, root );
+		if( !nd ) return;
+
+		postorder( std::forward<Func>( f ), nd->left );
+		postorder( std::forward<Func>( f ), nd->right );
+		f( nd->value );
+	}
+
+	/**
+	 * Keep tree balanced, main feature of an AVL tree
+	 */
+	void balance( Node*& nd )
+	{
+
+	}
+
+	/**
+	 * Return deep copy of a tree pointed by nd
+	 */ 
+	Node* clone( Node* nd ) const
+	{
+
 	}
 };
 
