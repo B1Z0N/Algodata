@@ -209,6 +209,120 @@ public:
 
 private:	
 
+	/**
+	 * Error class for signalizing that operation
+	 * can't be performed if tree is empty 
+	 */
+	class EmptyTreeError : public std::exception { };
+
+	/**
+	 * Binary tree node class
+	 */
+	class Node
+	{
+		T value;	 ///< Value stored in this node
+		Node *left;  ///< Left subtree pointer
+		Node *right; ///< Right subtree pointer
+
+	public:	
+		Node( const T& value, Node *left, Node* right )
+			: value{ value }, left{ left }, right{ right } { }
+
+		Node( T&& value, Node* left, Node* right )
+			: value( std::move( value ) ), left{ left }, right{ right } { }
+	};
+
+	Node *root; ///< Root node 
+
+	/**
+	 * Insert item to node, keep it balanced
+	 */
+	void insert( const T& value, Node*& nd )
+	{
+
+	}
+
+	/**
+	 * Find and remove value from tree, keep it balanced
+	 */
+	void remove( const T& value, Node*& nd )
+	{
+		remove( value, root );
+	}
+
+	/**
+	 * Remove all elements from tree
+	 */
+ 	void erase( Node*& nd )
+ 	{
+ 		erase( root );
+ 	}
+
+ 	/**
+ 	 * Return true if value is in the tree
+ 	 */
+ 	bool contains( const T& value, Node*& nd )
+ 	{
+ 		return contains( value, root );
+ 	}
+
+ 	/**
+ 	 * Return pointer to the minimal item of the tree
+ 	 */
+	T find_min( Node*& nd )
+	{
+		
+	}
+
+ 	/**
+ 	 * Return pointer to the maximal item of the tree
+ 	 */
+	T find_max( Node*& nd )
+	{
+
+	}
+
+	/**
+	 * Return height of the tree
+	 */
+	size_t height( Node*& nd, Node*& nd )
+	{
+
+	}
+
+	/**
+	 * Return number of items in the tree
+	 */
+	size_t size( Node*& nd )
+	{
+
+	}
+
+	/**
+	 * Call f on each item in this order: Parent-Left-Right
+	 */
+	template <typename Func>
+	void preorder( Func f, Node*& nd )
+	{
+
+	}
+
+	/**
+	 * Call f on each item in this order: Left-Parent-Right
+	 */
+	template <typename Func>
+	void inorder( Func f )
+	{
+	}
+
+	/**
+	 * Call f on each item in this order: Left-Right-Parent
+	 */
+	template <typename Func>
+	void postorder( Func f )
+	{
+		postorder( f, root );
+	}
 };
 
 
