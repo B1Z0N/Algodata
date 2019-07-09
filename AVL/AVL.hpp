@@ -169,7 +169,7 @@ public:
 	 */
 	size_t height( )
 	{
-
+		return height( root );
 	}
 
 	/**
@@ -177,16 +177,21 @@ public:
 	 */
 	size_t size( )
 	{
-
+		return size( root );
 	}
 
 	/**
 	 * Call f on each item in this order: Parent-Left-Right
 	 */
 	template <typename Func>
-	void preorder( Func f )
+	void preorder( Func&& f )
 	{
-		preorder( f, root );
+		if( empty( ) )
+		{
+			throw EmptyTreeError { };
+		}
+
+		preorder( std::forward<Func>(f), root );
 	}
 
 	/**
@@ -195,7 +200,12 @@ public:
 	template <typename Func>
 	void inorder( Func f )
 	{
-		inorder( f, root );
+		if( empty( ) )
+		{
+			throw EmptyTreeError { };
+		}
+
+		inorder( std::forward<Func>(f), root );
 	}
 
 	/**
@@ -204,7 +214,12 @@ public:
 	template <typename Func>
 	void postorder( Func f )
 	{
-		postorder( f, root );
+		if( empty( ) )
+		{
+			throw EmptyTreeError { };
+		}
+
+		postorder( std::forward<Func>(f), root );
 	}
 
 private:	
@@ -236,37 +251,42 @@ private:
 	/**
 	 * Insert item to node, keep it balanced
 	 */
-	void insert( const T& value, Node* nd )
+	void insert( const T& value, Node*& nd )
 	{
-		Node *head {nd};
-		
-		while( nd )
-		{
-			prev = nd;
-			if( nd->value < value )
-			{
-				nd = nd->right;
-			}
-			else if( nd->value > value )
-			{
-				nd = nd->left;
-			}
-			else
-				;	// Duplicate
-		}
-
-		nd = new Node { value, nullptr, nullptr };
-
-		balance( head );
+        if( nd == nullptr )
+            nd = new Node{ value, nullptr, nullptr };
+        else if( value < nd->value )
+            insert( value, nd->left );
+        else if( nd->value < value )
+            insert( value, nd->right );
+        else
+            ;  // Duplicate; do nothing
 	}
 
 	/**
 	 * Find and remove value from tree, keep it balanced
 	 */
-	void remove( const T& value, Node*& nd ) noexcept
-	{
+    void remove( const T & value, Node * & nd ) noexcept
+    {
+        if( nd == nullptr )
+            return;   // Item not found; do nothing
 
-	}
+        if( value < nd->value )
+            remove( value, nd->left );
+        else if( nd->value < value )
+            remove( value, nd->right );
+        else if( nd->left != nullptr && nd->right != nullptr ) // Two children
+        {
+            nd->value = find_min( nd->right )->value;
+            remove( nd->value, nd->right );
+        }
+        else
+        {
+            Node *oldnode = nd;
+            nd = ( nd->left != nullptr ) ? nd->left : nd->right;
+            delete oldnode;
+        }
+    }
 
 	/**
 	 * Remove all elements from tree
@@ -286,30 +306,23 @@ private:
  	/**
  	 * Return true if value is in the tree
  	 */
- 	bool contains( const T& value, Node*& nd ) const noexcept
- 	{
- 		if( !nd ) 
- 		{
- 			return false;
- 		}
- 		else if( value > nd->value )
- 		{
- 			return contains( value, nd->right );
- 		}
- 		else if( value < nd->value )
- 		{
- 			return contains( value, nd ->left );
- 		}
- 		else 
- 		{
- 			return true;
- 		}
- 	}
+    bool contains( const T & value, Node *nd ) const noexcept
+    {
+        while( nd != nullptr )
+            if( value < nd->value )
+                nd = nd->left;
+            else if( nd->value < value )
+                nd = nd->right;
+            else
+                return true;    // Match
+
+        return false;   // No match
+    }
 
  	/**
  	 * Return pointer to the node with the minimal item
  	 */
-	Node* find_min( Node*& nd ) const noexcept
+	Node* find_min( Node* nd ) const noexcept
 	{
 		while( nd->left )
 		{
@@ -322,7 +335,7 @@ private:
  	/**
  	 * Return pointer to the node with the maximal item
  	 */
-	Node* find_max( Node*& nd ) const noexcept
+	Node* find_max( Node* nd ) const noexcept
 	{
 		while( nd->right )
 		{
@@ -393,20 +406,32 @@ private:
 	}
 
 	/**
-	 * Keep tree balanced, main feature of an AVL tree
-	 */
-	void balance( Node*& nd )
-	{
-
-	}
-
-	/**
 	 * Return deep copy of a tree pointed by nd
 	 */ 
 	Node* clone( Node* nd ) const
 	{
+		return nd == nullptr ?
+			   nullptr  	 :
+			   new Node{ nd->value, clone( nd->left ), clone( nd->right ) };
+	}
+
+// *******************SPECIFIC-TO-AVL-BTree***********************
+
+	/**
+	 * Keep tree balanced, main feature of an AVL tree
+	 */
+	void balance( Node*& nd ) const
+	{
 
 	}
+
+
+
+
+// ***************************************************************
+
+
+
 };
 
 

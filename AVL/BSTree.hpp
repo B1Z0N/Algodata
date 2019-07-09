@@ -1,7 +1,7 @@
 #ifndef BINARY_SEARCH_TREE_H
 #define BINARY_SEARCH_TREE_H
 
-#include "dsexceptions.h"
+// #include "dsexceptions.h"
 #include <algorithm>
 using namespace std;       
 
@@ -19,7 +19,7 @@ using namespace std;
 // void makeEmpty( )      --> Remove all items
 // void printTree( )      --> Print tree in sorted order
 // ******************ERRORS********************************
-// Throws UnderflowException as warranted
+// Throws EmptyTreeError as warranted
 
 template <typename Comparable>
 class BinarySearchTree
@@ -75,23 +75,23 @@ class BinarySearchTree
     
     /**
      * Find the smallest item in the tree.
-     * Throw UnderflowException if empty.
+     * Throw EmptyTreeError if empty.
      */
     const Comparable & findMin( ) const
     {
         if( isEmpty( ) )
-            throw UnderflowException{ };
+            throw EmptyTreeError{ };
         return findMin( root )->element;
     }
 
     /**
      * Find the largest item in the tree.
-     * Throw UnderflowException if empty.
+     * Throw EmptyTreeError if empty.
      */
     const Comparable & findMax( ) const
     {
         if( isEmpty( ) )
-            throw UnderflowException{ };
+            throw EmptyTreeError{ };
         return findMax( root )->element;
     }
 
@@ -157,6 +157,13 @@ class BinarySearchTree
 
 
   private:
+
+    /**
+     * Error class for signalizing that operation
+     * can't be performed if tree is empty 
+     */
+    class EmptyTreeError : public std::exception { };
+
     struct BinaryNode
     {
         Comparable element;
@@ -281,7 +288,7 @@ class BinarySearchTree
 /****** NONRECURSIVE VERSION*************************
     bool contains( const Comparable & x, BinaryNode *t ) const
     {
-        while( t != nullptr )
+        while( t != nullptr )U
             if( x < t->element )
                 t = t->left;
             else if( t->element < x )
