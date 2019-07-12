@@ -51,14 +51,16 @@ public:
 	/**
 	 * Default constructor
 	 */
-	AVLtree( ) : root{ nullptr }
+	AVLtree( ) noexcept
+	 : root{ nullptr }
 	{
 	}
 
 	/**
 	 * Copy constructor
 	 */
-	AVLtree( const AVLtree& rhs ) : root{ nullptr }
+	AVLtree( const AVLtree& rhs )
+	 : root{ nullptr }
 	{
 		root = clone( rhs.root );
 	}
@@ -74,7 +76,7 @@ public:
 	/**
 	 * Destructor
 	 */
-	~AVLtree( )
+	~AVLtree( ) noexcept
 	{
 		erase( );
 	}
@@ -110,7 +112,7 @@ public:
 	/**
 	 * Find and remove value from tree, keep it balanced
 	 */
-	void remove( const T& value )
+	void remove( const T& value ) noexcept
 	{
 		remove( value, root );
 	}
@@ -118,7 +120,7 @@ public:
 	/**
 	 * Remove all elements from tree
 	 */
-	void erase( )
+	void erase( ) noexcept
 	{
 		erase( root );
 	}
@@ -126,7 +128,7 @@ public:
 	/**
 	 * Return true if value is in the tree
 	 */
-	bool contains( const T& value )
+	bool contains( const T& value ) const noexcept
 	{
 		return contains( value, root );
 	}
@@ -134,7 +136,7 @@ public:
 	/**
 	 * Return true if it is empty
 	 */
-	bool empty( )
+	bool empty( ) const noexcept
 	{
 		return root == nullptr;
 	}
@@ -142,7 +144,7 @@ public:
 	/**
 	 * Return minimal item of the tree
 	 */
-	T find_min( )
+	T find_min( ) const
 	{
 		if ( empty( ) )
 		{
@@ -155,7 +157,7 @@ public:
 	/**
 	 * Return maximal item of the tree
 	 */
-	T find_max( )
+	T find_max( ) const
 	{
 		if ( empty( ) )
 		{
@@ -168,7 +170,7 @@ public:
 	/**
 	 * Return height of the tree
 	 */
-	size_t height( )
+	size_t height( ) const noexcept
 	{
 		return height( root );
 	}
@@ -176,7 +178,7 @@ public:
 	/**
 	 * Return number of items in the tree
 	 */
-	size_t size( )
+	size_t size( ) const noexcept
 	{
 		return size( root );
 	}
@@ -185,7 +187,7 @@ public:
 	 * Call f on each item in this order: Parent-Left-Right
 	 */
 	template <typename Func>
-	void preorder( Func&& f )
+	void preorder( Func&& f ) const
 	{
 		if ( empty( ) )
 		{
@@ -199,7 +201,7 @@ public:
 	 * Call f on each item in this order: Left-Parent-Right
 	 */
 	template <typename Func>
-	void inorder( Func f )
+	void inorder( Func f ) const
 	{
 		if ( empty( ) )
 		{
@@ -213,7 +215,7 @@ public:
 	 * Call f on each item in this order: Left-Right-Parent
 	 */
 	template <typename Func>
-	void postorder( Func f )
+	void postorder( Func f ) const
 	{
 		if ( empty( ) )
 		{
@@ -222,7 +224,7 @@ public:
 
 		postorder( std::forward<Func>(f), root );
 	}
-	
+
 	/**
 	 * Error class for signalizing that operation
 	 * can't be performed if tree is empty
@@ -434,7 +436,7 @@ private:
 	/**
 	 * Keep tree balanced, main feature of an AVL tree
 	 */
-	void balance( Node*& imb_node )
+	void balance( Node*& imb_node ) noexcept
 	{
 		int factor { b_factor( imb_node ) };
 
@@ -485,7 +487,7 @@ private:
 	/**
 	 * Right single rotation
 	 */
-	void rr_rotate( Node*& nd )
+	void rr_rotate( Node*& nd ) noexcept
 	{
 		Node* new_right = nd;
 		nd = nd->left;
@@ -496,7 +498,7 @@ private:
 	/**
 	 * Left single rotation
 	 */
-	void ll_rotate( Node*& nd )
+	void ll_rotate( Node*& nd ) noexcept
 	{
 		Node* new_left = nd;
 		nd = nd->right;
@@ -508,7 +510,7 @@ private:
 	/**
 	 * Right-left double rotation
 	 */
-	void rl_rotate( Node*& nd )
+	void rl_rotate( Node*& nd ) noexcept
 	{
 		rr_rotate( nd->right );
 		ll_rotate( nd );
@@ -517,7 +519,7 @@ private:
 	/**
 	 * Left-right double rotation
 	 */
-	void lr_rotate( Node*& nd )
+	void lr_rotate( Node*& nd ) noexcept
 	{
 		ll_rotate( nd->left );
 		rr_rotate( nd );
