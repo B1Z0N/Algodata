@@ -53,7 +53,7 @@ public:
 	 * Default constructor
 	 */
 	RBtree( ) noexcept
-		: root { NIL }
+		: root { Node::NIL }
 	{
 	}
 
@@ -232,12 +232,45 @@ public:
 	class EmptyTreeError : public std::exception { };
 	
 private:
-
-// *******************SPECIFIC-TO-RED_BLACK-tree***********************
+// ******************Internal-members-and-classes**********************	
 	/**
 	 * Enumeration for coloring red-black tree
 	 */
 	enum class Color { RED, BLACK };
+
+	/**
+	 * Binary tree node class
+	 */
+	struct Node
+	{
+		T value;	   ///< Value stored in this node
+
+		Color color;   ///< Red or black color of the node
+
+		Node *parent;  ///< Parent node pointer
+		Node *left;    ///< Left subtree pointer
+		Node *right;   ///< Right subtree pointer
+
+		Node( const T& value, Color color, Node* parent, Node *left, Node* right)
+			: value{ value }, color{ color }, parent{ parent },
+			  left{ left }, right{ right } { }
+
+		Node( T&& value, Color color, Node* parent, Node *left, Node* right)
+			: value{ std::move(value) }, color{ color }, parent{ parent },
+			  left{ left }, right{ right } { }
+
+		/**
+		 * Sentinel for NIL (external leaf) support
+		 */
+		static constexpr Node  NIL_VAL { T{ }, Color::BLACK, nullptr, nullptr, nullptr };
+		static constexpr Node* NIL     { &NIL_VAL };
+	};
+
+	Node *root; ///< Root node
+
+private:
+
+// *******************SPECIFIC-TO-RED_BLACK-tree***********************
 
 	/**
 	 * Get balancing factor
@@ -334,36 +367,6 @@ private:
 
 private:
 
-	/**
-	 * Binary tree node class
-	 */
-	struct Node
-	{
-		T value;	   ///< Value stored in this node
-
-		Color color;   ///< Red or black color of the node
-
-		Node *parent;  ///< Parent node pointer
-		Node *left;    ///< Left subtree pointer
-		Node *right;   ///< Right subtree pointer
-
-
-		Node( const T& value, Color color, Node* parent, Node *left, Node* right)
-			: value{ value }, color{ color }, parent{ parent },
-			  left{ left }, right{ right } { }
-
-		Node( T&& value, Color color, Node* parent, Node *left, Node* right)
-			: value{ std::move(value) }, color{ color }, parent{ parent },
-			  left{ left }, right{ right } { }
-
-		/**
-		 * Sentinel for NIL (external leaf) support
-		 */
-		static constexpr Node  NIL_VAL { T{ }, Color::BLACK, nullptr, nullptr, nullptr };
-		static constexpr Node* NIL     { &NIL_VAL };
-	};
-
-	Node *root; ///< Root node
 
 	/**
 	 * Insert item to node, keep it balanced
