@@ -230,9 +230,9 @@ public:
 	 * can't be performed if tree is empty
 	 */
 	class EmptyTreeError : public std::exception { };
-	
+
 private:
-// ******************Internal-members-and-classes**********************	
+// ******************Internal-members-and-classes**********************
 	/**
 	 * Enumeration for coloring red-black tree
 	 */
@@ -243,13 +243,21 @@ private:
 	 */
 	struct Node
 	{
-		T value;	   ///< Value stored in this node
+		T value;	       ///< Value stored in this node
 
-		Color color;   ///< Red or black color of the node
+		Color color;       ///< Red or black color of the node
 
-		Node *parent;  ///< Parent node pointer
-		Node *left;    ///< Left subtree pointer
-		Node *right;   ///< Right subtree pointer
+		Node *parent;      ///< Parent node pointer
+		Node *left;        ///< Left subtree pointer
+		Node *right;   	   ///< Right subtree pointer
+
+		static Node* NIL;  ///<Sentinel for NIL (external leaf) support
+
+		Node( const Node& ) = default;
+		Node( Node&& ) = default;
+
+		Node& operator = ( const Node& ) = default;
+		Node& operator = ( Node&& ) = default;
 
 		Node( const T& value, Color color, Node* parent, Node *left, Node* right)
 			: value{ value }, color{ color }, parent{ parent },
@@ -258,12 +266,6 @@ private:
 		Node( T&& value, Color color, Node* parent, Node *left, Node* right)
 			: value{ std::move(value) }, color{ color }, parent{ parent },
 			  left{ left }, right{ right } { }
-
-		/**
-		 * Sentinel for NIL (external leaf) support
-		 */
-
-		static Node* NIL;
 
 		~Node() { delete NIL; }
 	};
@@ -305,6 +307,14 @@ private:
 		nd = nd->right;
 		new_left->right = nd->left;
 		nd->left = new_left;
+
+	}
+
+	/**
+	 * Recolor the tree
+	 */
+	void insert_fixup( const T& value, Node*& nd )
+	{
 
 	}
 
@@ -378,20 +388,28 @@ private:
 	 */
 	void insert( const T& value, Node*& nd )
 	{
-		if ( nd == Node::NIL )
-			nd = new Node{ value, Color::RED, nullptr, Node::NIL, Node::NIL };
-		else if ( value < nd->value )
+		Node* temp = nd;
+		Node* prev = Node::NIL;
+
+		while ( temp != Node::NIL )
 		{
-			insert( value, nd->left );
-			balance( nd );
+			prev = temp;
+			if ( value > temp->value )
+				temp = temp->right;
+			else
+				temp = temp->left ;
 		}
-		else if ( nd->value < value )
-		{
-			insert( value, nd->right );
-			balance( nd );
-		}
+
+		temp = new Node { value, Color::RED, prev, Node::NIL, Node::NIL };
+
+		if( prev == Node::NIL ) 
+			nd = temp;
+		else if ( value > prev->value )
+			prev->right = temp;
 		else
-			;  // Duplicate; do nothing
+			prev->left  = temp;
+
+		insert_fixup( value, nd );
 	}
 
 	/**
@@ -551,14 +569,14 @@ private:
 		return nd == Node::NIL ?
 		       Node::NIL  	   :
 		       new Node{ nd->value, nd->color, nd->parent,
-		       			 clone( nd->left ), clone( nd->right ) };
+		                 clone( nd->left ), clone( nd->right ) };
 	}
 };
 
 
 template <typename T>
-typename RBtree<T>::Node* RBtree<T>::Node::NIL = 
-	new RBtree<T>::Node { reinterpret_cast<T>(0), Color::BLACK, nullptr, nullptr, nullptr };
+typename RBtree<T>::Node* RBtree<T>::Node::NIL =
+    new RBtree<T>::Node { reinterpret_cast<T>(0), Color::BLACK, nullptr, nullptr, nullptr };
 
 
 };
