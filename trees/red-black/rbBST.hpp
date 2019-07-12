@@ -7,7 +7,7 @@
 #include <tuple>
 
 
-// AVLtree class
+// RBtree class
 //
 // CONSTRUCTION: zero parameter
 //
@@ -42,9 +42,9 @@ namespace alda {
 
 template <typename Comparable>
 /**
- * Balanced AVL tree data structure implementation
+ * Balanced Red-Black tree data structure implementation
  */
-class AVLtree
+class RBtree
 {
 	using T = Comparable; ///< Alias for convenince
 public:
@@ -52,7 +52,7 @@ public:
 	/**
 	 * Default constructor
 	 */
-	AVLtree( ) : root{ nullptr }
+	AVLtree( ) : root{ NIL }
 	{
 	}
 
@@ -251,7 +251,7 @@ private:
 			  left{ left }, right{ right } { }
 
 		Node( T&& value, Color color, Node* parent, Node *left, Node* right)
-			: value{ value }, color{ color }, parent{ parent }, 
+			: value{ std::move(value) }, color{ color }, parent{ parent }, 
 			  left{ left }, right{ right } { }
 	};
 
@@ -446,7 +446,8 @@ private:
 	/**
 	 * Sentinel for NIL (external leaf) support
 	 */
-	Node* NIL {}
+	Node* NIL { T{ }, Color::BLACK, nullptr, nullptr, nullptr };
+
 	/**
 	 * Keep tree balanced, main feature of an AVL tree
 	 */
