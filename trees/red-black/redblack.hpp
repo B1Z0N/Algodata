@@ -52,14 +52,15 @@ public:
 	/**
 	 * Default constructor
 	 */
-	AVLtree( ) : root{ NIL }
+	AVLtree( ) noexcept
+		: root { NIL }
 	{
 	}
 
 	/**
 	 * Copy constructor
 	 */
-	AVLtree( const AVLtree& rhs ) : root{ nullptr }
+	AVLtree( const AVLtree& rhs ) : root{ Node::NIL }
 	{
 		root = clone( rhs.root );
 	}
@@ -69,13 +70,13 @@ public:
 	 */
 	AVLtree( AVLtree&& rhs ) : root{ rhs.root }
 	{
-		rhs.root = nullptr;
+		rhs.root = Node::NIL;
 	}
 
 	/**
 	 * Destructor
 	 */
-	~AVLtree( )
+	~AVLtree( ) noexcept
 	{
 		erase( );
 	}
@@ -111,7 +112,7 @@ public:
 	/**
 	 * Find and remove value from tree, keep it balanced
 	 */
-	void remove( const T& value )
+	void remove( const T& value ) noexcept
 	{
 		remove( value, root );
 	}
@@ -119,7 +120,7 @@ public:
 	/**
 	 * Remove all elements from tree
 	 */
-	void erase( )
+	void erase( ) noexcept
 	{
 		erase( root );
 	}
@@ -127,7 +128,7 @@ public:
 	/**
 	 * Return true if value is in the tree
 	 */
-	bool contains( const T& value )
+	bool contains( const T& value ) const noexcept
 	{
 		return contains( value, root );
 	}
@@ -135,15 +136,15 @@ public:
 	/**
 	 * Return true if it is empty
 	 */
-	bool empty( )
+	bool empty( ) const noexcept
 	{
-		return root == nullptr;
+		return root == Node::NIL;
 	}
 
 	/**
 	 * Return minimal item of the tree
 	 */
-	T find_min( )
+	T find_min( ) const noexcept
 	{
 		if ( empty( ) )
 		{
@@ -156,7 +157,7 @@ public:
 	/**
 	 * Return maximal item of the tree
 	 */
-	T find_max( )
+	T find_max( ) const noexcept
 	{
 		if ( empty( ) )
 		{
@@ -169,7 +170,7 @@ public:
 	/**
 	 * Return height of the tree
 	 */
-	size_t height( )
+	size_t height( ) const noexcept
 	{
 		return height( root );
 	}
@@ -177,7 +178,7 @@ public:
 	/**
 	 * Return number of items in the tree
 	 */
-	size_t size( )
+	size_t size( ) const noexcept
 	{
 		return size( root );
 	}
@@ -186,7 +187,7 @@ public:
 	 * Call f on each item in this order: Parent-Left-Right
 	 */
 	template <typename Func>
-	void preorder( Func&& f )
+	void preorder( Func&& f ) const
 	{
 		if ( empty( ) )
 		{
@@ -200,7 +201,7 @@ public:
 	 * Call f on each item in this order: Left-Parent-Right
 	 */
 	template <typename Func>
-	void inorder( Func f )
+	void inorder( Func f ) const
 	{
 		if ( empty( ) )
 		{
@@ -214,7 +215,7 @@ public:
 	 * Call f on each item in this order: Left-Right-Parent
 	 */
 	template <typename Func>
-	void postorder( Func f )
+	void postorder( Func f ) const
 	{
 		if ( empty( ) )
 		{
@@ -231,7 +232,7 @@ public:
 	class EmptyTreeError : public std::exception { };
 
 private:
-	
+
 	/**
 	 * Binary tree node class
 	 */
@@ -247,12 +248,18 @@ private:
 
 
 		Node( const T& value, Color color, Node* parent, Node *left, Node* right)
-			: value{ value }, color{ color }, parent{ parent }, 
+			: value{ value }, color{ color }, parent{ parent },
 			  left{ left }, right{ right } { }
 
 		Node( T&& value, Color color, Node* parent, Node *left, Node* right)
-			: value{ std::move(value) }, color{ color }, parent{ parent }, 
+			: value{ std::move(value) }, color{ color }, parent{ parent },
 			  left{ left }, right{ right } { }
+
+		/**
+		 * Sentinel for NIL (external leaf) support
+		 */
+		static constexpr Node  NIL_VAL { T{ }, Color::BLACK, nullptr, nullptr, nullptr };
+		static constexpr Node* NIL     { &NIL_VAL };
 	};
 
 	Node *root; ///< Root node
@@ -262,7 +269,7 @@ private:
 	 */
 	void insert( const T& value, Node*& nd )
 	{
-		if ( nd == nullptr )
+		if ( nd == Node::NIL )
 			nd = new Node{ value, nullptr, nullptr };
 		else if ( value < nd->value )
 		{
@@ -283,7 +290,7 @@ private:
 	 */
 	void remove( const T & value, Node * & nd ) noexcept
 	{
-		if ( nd == nullptr )
+		if ( nd == Node::NIL )
 			return;   // Item not found; do nothing
 
 		if ( value < nd->value )
@@ -294,7 +301,7 @@ private:
 		{
 			remove( value, nd->right );
 		}
-		else if ( nd->left != nullptr && nd->right != nullptr ) // Two children
+		else if ( nd->left != Node::NIL && nd->right != Node::NIL ) // Two children
 		{
 			nd->value = find_min( nd->right )->value;
 			remove( nd->value, nd->right );
@@ -302,7 +309,7 @@ private:
 		else
 		{
 			Node *oldnode = nd;
-			nd = ( nd->left != nullptr ) ? nd->left : nd->right;
+			nd = ( nd->left != Node::NIL ) ? nd->left : nd->right;
 			delete oldnode;
 			return;
 		}
@@ -315,14 +322,14 @@ private:
 	 */
 	void erase( Node*& nd ) noexcept
 	{
-		if ( nd )
+		if ( nd != Node::NIL )
 		{
 			erase( nd->left );
 			erase( nd->right );
 			delete nd;
 		}
 
-		nd = nullptr;
+		nd = Node::NIL;
 	}
 
 	/**
@@ -330,7 +337,7 @@ private:
 	 */
 	bool contains( const T & value, Node *nd ) const noexcept
 	{
-		while ( nd != nullptr )
+		while ( nd != Node::NIL )
 			if ( value < nd->value )
 				nd = nd->left;
 			else if ( nd->value < value )
@@ -372,7 +379,7 @@ private:
 	 */
 	size_t height( Node* nd ) const noexcept
 	{
-		if ( !nd ) return 0;
+		if ( nd == Node::NIL ) return 0;
 
 		return std::max( height( nd->left  ),
 		                 height( nd->right ) ) + 1;
@@ -383,7 +390,7 @@ private:
 	 */
 	size_t size( Node*& nd ) const noexcept
 	{
-		if ( !nd ) return 0;
+		if ( nd == Node::NIL ) return 0;
 
 		return size( nd->left ) + size( nd->right ) + 1;
 	}
@@ -394,7 +401,7 @@ private:
 	template <typename Func>
 	void preorder( Func&& f, Node*& nd ) const
 	{
-		if ( !nd ) return;
+		if ( nd == Node::NIL ) return;
 
 		f( nd->value );
 		preorder( std::forward<Func>( f ), nd->left );
@@ -407,7 +414,7 @@ private:
 	template <typename Func>
 	void inorder( Func&& f, Node*& nd ) const
 	{
-		if ( !nd ) return;
+		if ( nd == Node::NIL ) return;
 
 		inorder( std::forward<Func>( f ), nd->left );
 		f( nd->value );
@@ -420,7 +427,7 @@ private:
 	template <typename Func>
 	void postorder( Func&& f, Node*& nd ) const
 	{
-		if ( !nd ) return;
+		if ( nd == Node::NIL ) return;
 
 		postorder( std::forward<Func>( f ), nd->left );
 		postorder( std::forward<Func>( f ), nd->right );
@@ -432,8 +439,8 @@ private:
 	 */
 	Node* clone( Node* nd ) const
 	{
-		return nd == nullptr ?
-		       nullptr  	 :
+		return nd == Node::NIL ?
+		       Node::NIL  	   :
 		       new Node{ nd->value, clone( nd->left ), clone( nd->right ) };
 	}
 
@@ -444,14 +451,40 @@ private:
 	enum class Color { RED, BLACK };
 
 	/**
-	 * Sentinel for NIL (external leaf) support
+	 * Get balancing factor
 	 */
-	Node* NIL { T{ }, Color::BLACK, nullptr, nullptr, nullptr };
+	int b_factor( Node* nd ) const noexcept
+	{
+		return height( nd->left ) - height( nd->right );
+	}
+
+	/**
+	 * Right single rotation
+	 */
+	void rr_rotate( Node*& nd ) noexcept
+	{
+		Node* new_right = nd;
+		nd = nd->left;
+		new_right->left = nd->right;
+		nd->right = new_right;
+	}
+
+	/**
+	 * Left single rotation
+	 */
+	void ll_rotate( Node*& nd ) noexcept
+	{
+		Node* new_left = nd;
+		nd = nd->right;
+		new_left->right = nd->left;
+		nd->left = new_left;
+
+	}
 
 	/**
 	 * Keep tree balanced, main feature of an AVL tree
 	 */
-	void balance( Node*& imb_node )
+	void balance( Node*& imb_node ) noexcept
 	{
 		int factor { b_factor( imb_node ) };
 
@@ -492,40 +525,9 @@ private:
 	}
 
 	/**
-	 * Get balancing factor
-	 */
-	int b_factor( Node* nd ) const noexcept
-	{
-		return height( nd->left ) - height( nd->right );
-	}
-
-	/**
-	 * Right single rotation
-	 */
-	void rr_rotate( Node*& nd )
-	{
-		Node* new_right = nd;
-		nd = nd->left;
-		new_right->left = nd->right;
-		nd->right = new_right;
-	}
-
-	/**
-	 * Left single rotation
-	 */
-	void ll_rotate( Node*& nd )
-	{
-		Node* new_left = nd;
-		nd = nd->right;
-		new_left->right = nd->left;
-		nd->left = new_left;
-
-	}
-
-	/**
 	 * Right-left double rotation
 	 */
-	void rl_rotate( Node*& nd )
+	void rl_rotate( Node*& nd ) noexcept
 	{
 		rr_rotate( nd->right );
 		ll_rotate( nd );
@@ -534,12 +536,11 @@ private:
 	/**
 	 * Left-right double rotation
 	 */
-	void lr_rotate( Node*& nd )
+	void lr_rotate( Node*& nd ) noexcept
 	{
 		ll_rotate( nd->left );
 		rr_rotate( nd );
 	}
-
 // ***************************************************************
 
 
