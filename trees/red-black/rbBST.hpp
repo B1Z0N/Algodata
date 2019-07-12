@@ -224,14 +224,14 @@ public:
 		postorder( std::forward<Func>(f), root );
 	}
 
-private:
-
 	/**
 	 * Error class for signalizing that operation
 	 * can't be performed if tree is empty
 	 */
 	class EmptyTreeError : public std::exception { };
 
+private:
+	
 	/**
 	 * Binary tree node class
 	 */
