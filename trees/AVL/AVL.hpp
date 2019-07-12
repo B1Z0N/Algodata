@@ -386,7 +386,7 @@ private:
 	 * Call f on each item in this order: Parent-Left-Right
 	 */
 	template <typename Func>
-	void preorder( Func&& f, Node*& nd ) const
+	void preorder( Func&& f, Node* nd ) const
 	{
 		if ( !nd ) return;
 
@@ -399,7 +399,7 @@ private:
 	 * Call f on each item in this order: Left-Parent-Right
 	 */
 	template <typename Func>
-	void inorder( Func&& f, Node*& nd ) const
+	void inorder( Func&& f, Node* nd ) const
 	{
 		if ( !nd ) return;
 
@@ -412,7 +412,7 @@ private:
 	 * Call f on each item in this order: Left-Right-Parent
 	 */
 	template <typename Func>
-	void postorder( Func&& f, Node*& nd ) const
+	void postorder( Func&& f, Node* nd ) const
 	{
 		if ( !nd ) return;
 

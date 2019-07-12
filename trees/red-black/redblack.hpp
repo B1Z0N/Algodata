@@ -5,7 +5,7 @@
 #include <iostream>
 #include <exception>
 #include <tuple>
-
+#include <memory>
 
 // RBtree class
 //
@@ -262,11 +262,16 @@ private:
 		/**
 		 * Sentinel for NIL (external leaf) support
 		 */
-		static constexpr Node  NIL_VAL { T{ }, Color::BLACK, nullptr, nullptr, nullptr };
-		static constexpr Node* NIL     { &NIL_VAL };
+
+		static Node* NIL;
+
+		~Node() { delete NIL; }
 	};
 
+	// std::unique_ptr<Node> Node::NIL { reinterpret_cast<T>(0), Color::BLACK, nullptr, nullptr, nullptr };
+
 	Node *root; ///< Root node
+
 
 private:
 
@@ -374,7 +379,7 @@ private:
 	void insert( const T& value, Node*& nd )
 	{
 		if ( nd == Node::NIL )
-			nd = new Node{ value, nullptr, nullptr };
+			nd = new Node{ value, Color::RED, nullptr, Node::NIL, Node::NIL };
 		else if ( value < nd->value )
 		{
 			insert( value, nd->left );
@@ -457,7 +462,7 @@ private:
 	 */
 	Node* find_min( Node* nd ) const noexcept
 	{
-		while ( nd->left )
+		while ( nd->left != Node::NIL )
 		{
 			nd = nd->left;
 		}
@@ -470,7 +475,7 @@ private:
 	 */
 	Node* find_max( Node* nd ) const noexcept
 	{
-		while ( nd->right )
+		while ( nd->right != Node::NIL )
 		{
 			nd = nd->right;
 		}
@@ -503,7 +508,7 @@ private:
 	 * Call f on each item in this order: Parent-Left-Right
 	 */
 	template <typename Func>
-	void preorder( Func&& f, Node*& nd ) const
+	void preorder( Func&& f, Node* nd ) const
 	{
 		if ( nd == Node::NIL ) return;
 
@@ -516,7 +521,7 @@ private:
 	 * Call f on each item in this order: Left-Parent-Right
 	 */
 	template <typename Func>
-	void inorder( Func&& f, Node*& nd ) const
+	void inorder( Func&& f, Node* nd ) const
 	{
 		if ( nd == Node::NIL ) return;
 
@@ -529,7 +534,7 @@ private:
 	 * Call f on each item in this order: Left-Right-Parent
 	 */
 	template <typename Func>
-	void postorder( Func&& f, Node*& nd ) const
+	void postorder( Func&& f, Node* nd ) const
 	{
 		if ( nd == Node::NIL ) return;
 
@@ -545,11 +550,18 @@ private:
 	{
 		return nd == Node::NIL ?
 		       Node::NIL  	   :
-		       new Node{ nd->value, clone( nd->left ), clone( nd->right ) };
+		       new Node{ nd->value, nd->color, nd->parent,
+		       			 clone( nd->left ), clone( nd->right ) };
 	}
 };
 
 
+template <typename T>
+typename RBtree<T>::Node* RBtree<T>::Node::NIL = 
+	new RBtree<T>::Node { reinterpret_cast<T>(0), Color::BLACK, nullptr, nullptr, nullptr };
+
+
 };
+
 
 #endif
