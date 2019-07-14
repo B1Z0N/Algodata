@@ -230,7 +230,7 @@ public:
 	 * Call f on each item level-by-level, left-to-right
 	 */
 	template <typename Func>
-	void levelorder( Func f ) const
+	void levelorder( Func&& f ) const
 	{
 		if ( empty( ) )
 		{

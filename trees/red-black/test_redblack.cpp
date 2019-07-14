@@ -1,9 +1,55 @@
 #include "redblack.hpp"
 
 #include <iostream>
+#include <string>
+#include <vector>
 
 using namespace std;
 using namespace alda;
+
+template <typename T>
+class levels {
+	T min;
+	std::vector<T> items { };
+
+	int counter { };
+	std::vector<int> new_levels { };
+
+public:
+
+	void operator()( T a )
+	{
+		++counter;
+		if ( counter == 1)
+		{
+			min = a;
+		}
+		else if( min >= a) 
+		{
+			min = a;
+			new_levels.push_back( counter - 1 ); // 1, 2
+		}
+
+
+		items.push_back( a ); // 20, 10, 30
+	}
+
+	void print()
+	{
+		int size = items.size();
+		int count = 0;
+		for ( int i = 0; i < items.size(); )
+		{
+			cout << std::string( size--, ' ');
+			while ( i != new_levels[count] && i < items.size() )
+			{
+				cout << items[i++] << ' ';
+			}
+			count++;
+			cout << "\n";
+		}
+	}
+};
 
 int main()
 {
@@ -35,7 +81,11 @@ int main()
 	// }
 
 	cout << "Treee is: ";
-	tr.levelorder( [ ]( int val ) { cout << val << " "; } );
+	levels<int> lvls {};
+	// tr.levelorder( [ ]( int a ) { cout << a << " "; } );
 	cout << "\n";
-
+	tr.levelorder( lvls );
+	lvls.print( );
+	cout << "\n";
+	
 }
