@@ -320,11 +320,6 @@ private:
 		pt->parent = pt_left;
 	}
 
-	int is_left_node( Node* nd )
-	{
-		return nd->parent->left == nd;
-	}
-
 	/**
 	 * Left single rotation
 	 */
@@ -387,7 +382,7 @@ private:
 				Node* pright = nd->parent->parent->right;
 
 				if ( pright->color == Color::RED )
-				// just recoloring
+					// just recoloring
 				{
 					nd->parent->color = Color::BLACK;
 					pright->color = Color::BLACK;
@@ -395,7 +390,7 @@ private:
 					nd = nd->parent->parent;
 					nd->color = Color::RED;
 				}
-				else if( nd->parent->left == nd)
+				else if ( nd->parent->left == nd)
 				{
 					left_left( nd );
 				}
@@ -417,7 +412,7 @@ private:
 					nd = nd->parent->parent;
 					nd->color = Color::RED;
 				}
-				else if( nd->parent->right == nd)
+				else if ( nd->parent->right == nd)
 				{
 					right_right( nd );
 				}
@@ -433,6 +428,95 @@ private:
 		root->color = Color::BLACK;
 	}
 
+	/**
+	 * Tranplant node "from" to node "to"
+	 */
+	void RBtransplant( Node* to, Node* from )
+	{
+		if ( to->parent == NIL )
+			root = from;
+		else if ( to == to->parent->left )
+			to->parent->left  = from;
+		else
+			to->parent->right = from;
+
+		from->parent = to->parent;
+	}
+
+	/**
+	 * Remove node from tree, keeping it Red-Black
+	 */
+	void RBremove( Node* nd )
+	{
+		Node* replacement = nd;
+		Color orginal = replacement->color;
+		Node *broken;
+		if ( nd->left == NIL )
+			// if only right child is present
+		{
+			RBtransplant( nd, nd->right);
+			// set nd->right instead of nd
+			broken = nd->right;
+			// but now it's color's is broken
+		}
+		else if ( nd->right == NIL )
+			// if only left child is present
+		{
+			RBtransplant( nd, nd->left );
+			// set nd->right instead of nd
+			broken = nd->left;
+			// but now it's color's is broken
+		}
+		else
+			// in case it has two notnull nodes
+		{
+			replacement = find_min( nd->right );
+			// replace it with  minimal node of right subtree
+			original = replacement->color;
+			// but keep it's original color
+			broken = replacement->right;
+
+			if ( replacement->parent == nd )
+				// if minimal of right subtree is child of nd
+				broken->parent = replacement;
+			// replacement will move up to it's parent
+			// which is nd, so eventually it will point to nd
+			else
+				// if minimal of right subtree is not child of nd
+			{
+				RBtransplant( replacement, replacement->right );
+				// move replacement->right in place of replacement
+				replacement->right = nd->right;
+				replacement->right->parent = replacement;
+				// and set replacement in placement of deleted node
+			}
+
+			RBtransplant( nd, replacement );
+			// move replacement to nd
+
+			replacement->left = nd->left;
+			replacement->left->parent = replacement;
+			replacement->color = nd->color;
+			// and change it's data to nd's data
+		}
+
+		delete nd;
+		// now we may delete nd
+		// as it is replaced
+		if ( original == Color::BLACK )
+			// if original color is black, than there might be some
+			// violations of red-black properties
+			remove_fixup( broken );
+	}
+
+	/**
+	 * Fix color properties of red-black tree
+	 */
+	remove_fixup( Node* broken )
+	{
+
+	}
+
 // ***************************************************************
 
 private:
@@ -440,7 +524,7 @@ private:
 	/**
 	 * Insert item to node, keep it balanced
 	 */
-	void insert( const T& value, Node*& nd )
+	void insert( const T & value, Node*& nd )
 	{
 		Node* temp = nd;
 		Node* prev = NIL;
@@ -514,7 +598,7 @@ private:
 	/**
 	 * Return true if value is in the tree
 	 */
-	bool contains( const T & value, Node *nd ) const noexcept
+	bool contains( const T & value, Node * nd ) const noexcept
 	{
 		while ( nd != NIL )
 			if ( value < nd->value )
@@ -530,7 +614,7 @@ private:
 	/**
 	 * Return pointer to the node with the minimal item
 	 */
-	Node* find_min( Node* nd ) const noexcept
+	Node* find_min( Node * nd ) const noexcept
 	{
 		while ( nd->left != NIL )
 		{
@@ -543,7 +627,7 @@ private:
 	/**
 	 * Return pointer to the node with the maximal item
 	 */
-	Node* find_max( Node* nd ) const noexcept
+	Node* find_max( Node * nd ) const noexcept
 	{
 		while ( nd->right != NIL )
 		{
@@ -556,7 +640,7 @@ private:
 	/**
 	 * Return height of the tree
 	 */
-	size_t height( Node* nd ) const noexcept
+	size_t height( Node * nd ) const noexcept
 	{
 		if ( nd == NIL ) return 0;
 
@@ -578,7 +662,7 @@ private:
 	 * Call f on each item in this order: Parent-Left-Right
 	 */
 	template <typename Func>
-	void preorder( Func&& f, Node* nd ) const
+	void preorder( Func && f, Node * nd ) const
 	{
 		if ( nd == NIL ) return;
 
@@ -591,7 +675,7 @@ private:
 	 * Call f on each item in this order: Left-Parent-Right
 	 */
 	template <typename Func>
-	void inorder( Func&& f, Node* nd ) const
+	void inorder( Func && f, Node * nd ) const
 	{
 		if ( nd == NIL ) return;
 
@@ -604,7 +688,7 @@ private:
 	 * Call f on each item in this order: Left-Right-Parent
 	 */
 	template <typename Func>
-	void postorder( Func&& f, Node* nd ) const
+	void postorder( Func && f, Node * nd ) const
 	{
 		if ( nd == NIL ) return;
 
@@ -617,31 +701,31 @@ private:
 	 * Call f on each item level by level, left-to-right
 	 */
 	template <typename Func>
-	void levelorder( Func&& f, Node* nd ) const
+	void levelorder( Func && f, Node * nd ) const
 	{
 		if ( nd == NIL ) return;
 
 		std::queue<Node *> q;
 		q.push( nd );
 
-		while( !q.empty() )
+		while ( !q.empty() )
 		{
 			nd = q.front();
 			q.pop();
 
-			if( nd->left !=  NIL )
+			if ( nd->left !=  NIL )
 				q.push( nd->left  );
-			if( nd->right != NIL )
+			if ( nd->right != NIL )
 				q.push( nd->right );
 
 			f( nd->value );
-		}		
+		}
 	}
 
 	/**
 	 * Return deep copy of a tree pointed by nd
 	 */
-	Node* clone( Node* nd ) const
+	Node* clone( Node * nd ) const
 	{
 		return nd == NIL ?
 		       NIL  	   :
