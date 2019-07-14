@@ -5,7 +5,7 @@
 #include <iostream>
 #include <exception>
 #include <tuple>
-#include <memory>
+#include <queue>
 
 // RBtree class
 //
@@ -31,6 +31,8 @@
 // -> call f on each item: Left-Parent-Right
 // void postorder( Func f ) ->
 // -> call f on each item: Left-Right-Parent
+// void levelorder( Func f) ->
+// -> call f on each item level by level, left-to-right
 // ********************************************************
 
 
@@ -225,6 +227,20 @@ public:
 	}
 
 	/**
+	 * Call f on each item level-by-level, left-to-right
+	 */
+	template <typename Func>
+	void levelorder( Func f ) const
+	{
+		if ( empty( ) )
+		{
+			throw EmptyTreeError { };
+		}
+
+		levelorder( std::forward<Func>(f), root );
+	}
+
+	/**
 	 * Error class for signalizing that operation
 	 * can't be performed if tree is empty
 	 */
@@ -413,9 +429,8 @@ private:
 			}
 		}
 
-		// root color, appropriate setup
-		for ( ; nd->parent != NIL; nd = nd->parent ) { }
-		nd->color = Color::BLACK;
+		// root color appropriate setup
+		root->color = Color::BLACK;
 	}
 
 // ***************************************************************
@@ -596,6 +611,31 @@ private:
 		postorder( std::forward<Func>( f ), nd->left );
 		postorder( std::forward<Func>( f ), nd->right );
 		f( nd->value );
+	}
+
+	/**
+	 * Call f on each item level by level, left-to-right
+	 */
+	template <typename Func>
+	void levelorder( Func&& f, Node* nd ) const
+	{
+		if ( nd == NIL ) return;
+
+		std::queue<Node *> q;
+		q.push( nd );
+
+		while( !q.empty() )
+		{
+			nd = q.front();
+			q.pop();
+
+			if( nd->left !=  NIL )
+				q.push( nd->left  );
+			if( nd->right != NIL )
+				q.push( nd->right );
+
+			f( nd->value );
+		}		
 	}
 
 	/**

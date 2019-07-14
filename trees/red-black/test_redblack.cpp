@@ -35,7 +35,7 @@ int main()
 	// }
 
 	cout << "Treee is: ";
-	tr.preorder( [ ]( int val ) { cout << val << " "; } );
+	tr.levelorder( [ ]( int val ) { cout << val << " "; } );
 	cout << "\n";
 
 }
