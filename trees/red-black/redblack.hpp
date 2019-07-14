@@ -320,30 +320,48 @@ private:
 
 					nd = nd->parent->parent;
 					nd->color = Color::RED;
-
-					continue;
 				}
-				
-				if( nd->parent->left ==  nd && pright->color == Color::BLACK )
+				else if( nd->parent->right == nd )
 				{
-
+					nd = nd->parent;
+					ll_rotate( nd );
 				}
-
-				if( nd->parent->right == nd && pright->color == Color::BLACK )
+				else
 				{
-					continue;
+					nd->parent->color = Color::BLACK;
+					nd->parent->parent->color = Color::RED;
+					rr_rotate( nd->parent->parent );
 				}
 			}
-			else
+			else 	// symmetric, left replaced by right, and vice versa
 			{
 				Node* pleft = nd->parent->parent->left;
 
+				if( pleft->color == Color::RED )
+				{
+					nd->parent->color = Color::BLACK;
+					pleft->color = Color::BALCK;
+
+					nd = nd->parent->parent;
+					nd->color = Color::RED;
+				}
+				else if( nd->parent->left == nd )
+				{
+					nd = nd->parent;
+					rr_rotate( nd );
+				}
+				else
+				{
+					nd->parent->color = Color::BLACK;
+					nd->parent->parent->color = Color::RED;
+					ll_rotate( nd->parent->parent );
+				}
 			}
 		}
 
-		// root setup
+		// root color, appropriate setup
 		for( ; nd->parent != Node::NIL; nd = nd->parent ) { }
-		nd->color = Color::RED;
+		nd->color = Color::BLACK;
 	}
 
 // ***************************************************************
