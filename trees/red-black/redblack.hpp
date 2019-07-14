@@ -53,14 +53,13 @@ public:
 	 * Default constructor
 	 */
 	RBtree( ) noexcept
-		: root { Node::NIL }
 	{
 	}
 
 	/**
 	 * Copy constructor
 	 */
-	RBtree( const RBtree& rhs ) : root{ Node::NIL }
+	RBtree( const RBtree& rhs )
 	{
 		root = clone( rhs.root );
 	}
@@ -70,7 +69,7 @@ public:
 	 */
 	RBtree( RBtree&& rhs ) : root{ rhs.root }
 	{
-		rhs.root = Node::NIL;
+		rhs.root = NIL;
 	}
 
 	/**
@@ -138,7 +137,7 @@ public:
 	 */
 	bool empty( ) const noexcept
 	{
-		return root == Node::NIL;
+		return root == NIL;
 	}
 
 	/**
@@ -251,8 +250,6 @@ private:
 		Node *left;        ///< Left subtree pointer
 		Node *right;   	   ///< Right subtree pointer
 
-		static Node* NIL;  ///<Sentinel for NIL (external leaf) support
-
 		Node( const Node& ) = default;
 		Node( Node&& ) = default;
 
@@ -266,14 +263,15 @@ private:
 		Node( T&& value, Color color, Node* parent, Node *left, Node* right)
 			: value{ std::move(value) }, color{ color }, parent{ parent },
 			  left{ left }, right{ right } { }
-
-		~Node() { delete NIL; }
 	};
 
-	// std::unique_ptr<Node> Node::NIL { reinterpret_cast<T>(0), Color::BLACK, nullptr, nullptr, nullptr };
+	/**
+	 * nullptr sentinel value
+	 */
+	Node __NIL_VAL { reinterpret_cast<T>(0), Color::BLACK, nullptr, nullptr, nullptr };
 
-	Node *root; ///< Root node
-
+	Node* NIL { &__NIL_VAL }; ///< nullptr sentinel
+	Node *root { NIL }; ///< Root node
 
 private:
 
@@ -282,24 +280,60 @@ private:
 	/**
 	 * Right single rotation
 	 */
-	void rr_rotate( Node*& nd ) noexcept
+	void rr_rotate( Node*& pt ) noexcept
 	{
-		Node* new_right = nd;
-		nd = nd->left;
-		new_right->left = nd->right;
-		nd->right = new_right;
+		Node *pt_left = pt->left;
+
+		pt->left = pt_left->right;
+
+		if (pt->left != NIL)
+			pt->left->parent = pt;
+
+		pt_left->parent = pt->parent;
+
+		if (pt->parent == NIL)
+			root = pt_left;
+
+		else if (pt == pt->parent->left)
+			pt->parent->left = pt_left;
+
+		else
+			pt->parent->right = pt_left;
+
+		pt_left->right = pt;
+		pt->parent = pt_left;
+	}
+
+	int is_left_node( Node* nd )
+	{
+		return nd->parent->left == nd;
 	}
 
 	/**
 	 * Left single rotation
 	 */
-	void ll_rotate( Node*& nd ) noexcept
+	void ll_rotate(Node *&pt)
 	{
-		Node* new_left = nd;
-		nd = nd->right;
-		new_left->right = nd->left;
-		nd->left = new_left;
+		Node *pt_right = pt->right;
 
+		pt->right = pt_right->left;
+
+		if (pt->right != NIL)
+			pt->right->parent = pt;
+
+		pt_right->parent = pt->parent;
+
+		if (pt->parent == NIL)
+			root = pt_right;
+
+		else if (pt == pt->parent->left)
+			pt->parent->left = pt_right;
+
+		else
+			pt->parent->right = pt_right;
+
+		pt_right->left = pt;
+		pt->parent = pt_right;
 	}
 
 	/**
@@ -307,60 +341,80 @@ private:
 	 */
 	void insert_fixup( Node* nd )
 	{
-		while( nd->color == Color::RED )
+		static auto basic_case {
+			[ ] ( Node*& nd ) {
+				nd->parent->color = Color::BLACK;
+
+				nd = nd->parent->parent;
+				nd->color = Color::RED;
+			}
+		};
+
+		static auto left_left {
+			[this] ( Node*& nd ) {
+				basic_case( nd );
+				rr_rotate( nd );
+			}
+		};
+
+		static auto right_right {
+			[this] ( Node*& nd ) {
+				basic_case( nd );
+				ll_rotate( nd );
+			}
+		};
+
+		while ( nd->parent->color == Color::RED )
 		{
-			if( nd->parent == nd->parent->parent->left )
+			if ( nd->parent == nd->parent->parent->left )
 			{
 				Node* pright = nd->parent->parent->right;
 
-				if( pright->color == Color::RED )
+				if ( pright->color == Color::RED )
+				// just recoloring
 				{
 					nd->parent->color = Color::BLACK;
-					pright->color = Color::BALCK;
+					pright->color = Color::BLACK;
 
 					nd = nd->parent->parent;
 					nd->color = Color::RED;
 				}
-				else if( nd->parent->right == nd )
+				else if( nd->parent->left == nd)
 				{
-					nd = nd->parent;
-					ll_rotate( nd );
+					left_left( nd );
 				}
 				else
 				{
-					nd->parent->color = Color::BLACK;
-					nd->parent->parent->color = Color::RED;
-					rr_rotate( nd->parent->parent );
+					ll_rotate( nd->parent );
+					left_left( nd );
 				}
 			}
-			else 	// symmetric, left replaced by right, and vice versa
+			else 	// symmetric, left replaced with right, and vice versa
 			{
 				Node* pleft = nd->parent->parent->left;
 
-				if( pleft->color == Color::RED )
+				if ( pleft->color == Color::RED )
 				{
 					nd->parent->color = Color::BLACK;
-					pleft->color = Color::BALCK;
+					pleft->color = Color::BLACK;
 
 					nd = nd->parent->parent;
 					nd->color = Color::RED;
 				}
-				else if( nd->parent->left == nd )
+				else if( nd->parent->right == nd)
 				{
-					nd = nd->parent;
-					rr_rotate( nd );
+					right_right( nd );
 				}
 				else
 				{
-					nd->parent->color = Color::BLACK;
-					nd->parent->parent->color = Color::RED;
-					ll_rotate( nd->parent->parent );
+					rr_rotate( nd->parent );
+					right_right( nd );
 				}
 			}
 		}
 
 		// root color, appropriate setup
-		for( ; nd->parent != Node::NIL; nd = nd->parent ) { }
+		for ( ; nd->parent != NIL; nd = nd->parent ) { }
 		nd->color = Color::BLACK;
 	}
 
@@ -368,16 +422,15 @@ private:
 
 private:
 
-
 	/**
 	 * Insert item to node, keep it balanced
 	 */
 	void insert( const T& value, Node*& nd )
 	{
 		Node* temp = nd;
-		Node* prev = Node::NIL;
+		Node* prev = NIL;
 
-		while ( temp != Node::NIL )
+		while ( temp != NIL )
 		{
 			prev = temp;
 			if ( value > temp->value )
@@ -386,16 +439,16 @@ private:
 				temp = temp->left ;
 		}
 
-		temp = new Node { value, Color::RED, prev, Node::NIL, Node::NIL };
+		temp = new Node { value, Color::RED, prev, NIL, NIL };
 
-		if( prev == Node::NIL ) 
+		if ( prev == NIL )
 			nd = temp;
 		else if ( value > prev->value )
 			prev->right = temp;
 		else
 			prev->left  = temp;
 
-		insert_fixup( nd );
+		insert_fixup( temp );
 	}
 
 	/**
@@ -403,7 +456,7 @@ private:
 	 */
 	void remove( const T & value, Node * & nd ) noexcept
 	{
-		if ( nd == Node::NIL )
+		if ( nd == NIL )
 			return;   // Item not found; do nothing
 
 		if ( value < nd->value )
@@ -414,7 +467,7 @@ private:
 		{
 			remove( value, nd->right );
 		}
-		else if ( nd->left != Node::NIL && nd->right != Node::NIL ) // Two children
+		else if ( nd->left != NIL && nd->right != NIL ) // Two children
 		{
 			nd->value = find_min( nd->right )->value;
 			remove( nd->value, nd->right );
@@ -422,12 +475,10 @@ private:
 		else
 		{
 			Node *oldnode = nd;
-			nd = ( nd->left != Node::NIL ) ? nd->left : nd->right;
+			nd = ( nd->left != NIL ) ? nd->left : nd->right;
 			delete oldnode;
 			return;
 		}
-
-		balance( nd );
 	}
 
 	/**
@@ -435,14 +486,14 @@ private:
 	 */
 	void erase( Node*& nd ) noexcept
 	{
-		if ( nd != Node::NIL )
+		if ( nd != NIL )
 		{
 			erase( nd->left );
 			erase( nd->right );
 			delete nd;
 		}
 
-		nd = Node::NIL;
+		nd = NIL;
 	}
 
 	/**
@@ -450,7 +501,7 @@ private:
 	 */
 	bool contains( const T & value, Node *nd ) const noexcept
 	{
-		while ( nd != Node::NIL )
+		while ( nd != NIL )
 			if ( value < nd->value )
 				nd = nd->left;
 			else if ( nd->value < value )
@@ -466,7 +517,7 @@ private:
 	 */
 	Node* find_min( Node* nd ) const noexcept
 	{
-		while ( nd->left != Node::NIL )
+		while ( nd->left != NIL )
 		{
 			nd = nd->left;
 		}
@@ -479,7 +530,7 @@ private:
 	 */
 	Node* find_max( Node* nd ) const noexcept
 	{
-		while ( nd->right != Node::NIL )
+		while ( nd->right != NIL )
 		{
 			nd = nd->right;
 		}
@@ -492,7 +543,7 @@ private:
 	 */
 	size_t height( Node* nd ) const noexcept
 	{
-		if ( nd == Node::NIL ) return 0;
+		if ( nd == NIL ) return 0;
 
 		return std::max( height( nd->left  ),
 		                 height( nd->right ) ) + 1;
@@ -503,7 +554,7 @@ private:
 	 */
 	size_t size( Node*& nd ) const noexcept
 	{
-		if ( nd == Node::NIL ) return 0;
+		if ( nd == NIL ) return 0;
 
 		return size( nd->left ) + size( nd->right ) + 1;
 	}
@@ -514,7 +565,7 @@ private:
 	template <typename Func>
 	void preorder( Func&& f, Node* nd ) const
 	{
-		if ( nd == Node::NIL ) return;
+		if ( nd == NIL ) return;
 
 		f( nd->value );
 		preorder( std::forward<Func>( f ), nd->left );
@@ -527,7 +578,7 @@ private:
 	template <typename Func>
 	void inorder( Func&& f, Node* nd ) const
 	{
-		if ( nd == Node::NIL ) return;
+		if ( nd == NIL ) return;
 
 		inorder( std::forward<Func>( f ), nd->left );
 		f( nd->value );
@@ -540,7 +591,7 @@ private:
 	template <typename Func>
 	void postorder( Func&& f, Node* nd ) const
 	{
-		if ( nd == Node::NIL ) return;
+		if ( nd == NIL ) return;
 
 		postorder( std::forward<Func>( f ), nd->left );
 		postorder( std::forward<Func>( f ), nd->right );
@@ -552,17 +603,12 @@ private:
 	 */
 	Node* clone( Node* nd ) const
 	{
-		return nd == Node::NIL ?
-		       Node::NIL  	   :
+		return nd == NIL ?
+		       NIL  	   :
 		       new Node{ nd->value, nd->color, nd->parent,
 		                 clone( nd->left ), clone( nd->right ) };
 	}
 };
-
-
-template <typename T>
-typename RBtree<T>::Node* RBtree<T>::Node::NIL =
-    new RBtree<T>::Node { reinterpret_cast<T>(0), Color::BLACK, nullptr, nullptr, nullptr };
 
 
 };

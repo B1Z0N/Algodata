@@ -20,19 +20,19 @@ int main()
 		tr.insert( value );
 	}
 
-	cout << "Insert number of nodes you'd like to delete: \n";
-	cin >> nd_num;
+	// cout << "Insert number of nodes you'd like to delete: \n";
+	// cin >> nd_num;
 
-	while ( nd_num-- )
-	{
-		cout << "Treee is: ";
-		tr.preorder( [ ]( int val ) { cout << val << " "; } );
-		cout << "\n";
+	// while ( nd_num-- )
+	// {
+	// 	cout << "Treee is: ";
+	// 	tr.preorder( [ ]( int val ) { cout << val << " "; } );
+	// 	cout << "\n";
 
-		cout << "Insert next value to remove: \n";
-		cin >> value;
-		tr.remove( value );
-	}
+	// 	cout << "Insert next value to remove: \n";
+	// 	cin >> value;
+	// 	tr.remove( value );
+	// }
 
 	cout << "Treee is: ";
 	tr.preorder( [ ]( int val ) { cout << val << " "; } );
