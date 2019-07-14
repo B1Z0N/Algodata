@@ -280,14 +280,6 @@ private:
 // *******************SPECIFIC-TO-RED_BLACK-tree***********************
 
 	/**
-	 * Get balancing factor
-	 */
-	int b_factor( Node* nd ) const noexcept
-	{
-		return height( nd->left ) - height( nd->right );
-	}
-
-	/**
 	 * Right single rotation
 	 */
 	void rr_rotate( Node*& nd ) noexcept
@@ -313,71 +305,47 @@ private:
 	/**
 	 * Recolor the tree
 	 */
-	void insert_fixup( const T& value, Node*& nd )
+	void insert_fixup( Node* nd )
 	{
-
-	}
-
-	/**
-	 * Keep tree balanced, main feature of an AVL tree
-	 */
-	void balance( Node*& imb_node ) noexcept
-	{
-		int factor { b_factor( imb_node ) };
-
-		static auto right_is_higher { [ ] ( int fact ) {
-			return fact < -1;
-		}};
-
-		static auto left_is_higher { [ ] ( int fact ) {
-			return fact > 1;
-		}};
-
-		if ( left_is_higher( factor ) )
+		while( nd->color == Color::RED )
 		{
-			int lfactor = b_factor( imb_node->left );
-
-			if ( right_is_higher( lfactor ) )
+			if( nd->parent == nd->parent->parent->left )
 			{
-				lr_rotate( imb_node );
+				Node* pright = nd->parent->parent->right;
+
+				if( pright->color == Color::RED )
+				{
+					nd->parent->color = Color::BLACK;
+					pright->color = Color::BALCK;
+
+					nd = nd->parent->parent;
+					nd->color = Color::RED;
+
+					continue;
+				}
+				
+				if( nd->parent->left ==  nd && pright->color == Color::BLACK )
+				{
+
+				}
+
+				if( nd->parent->right == nd && pright->color == Color::BLACK )
+				{
+					continue;
+				}
 			}
 			else
 			{
-				rr_rotate( imb_node );
+				Node* pleft = nd->parent->parent->left;
+
 			}
 		}
-		else if ( right_is_higher( factor ) )
-		{
-			int rfactor = b_factor( imb_node->right );
 
-			if ( left_is_higher( rfactor ) )
-			{
-				rl_rotate( imb_node );
-			}
-			else
-			{
-				ll_rotate( imb_node );
-			}
-		}
+		// root setup
+		for( ; nd->parent != Node::NIL; nd = nd->parent ) { }
+		nd->color = Color::RED;
 	}
 
-	/**
-	 * Right-left double rotation
-	 */
-	void rl_rotate( Node*& nd ) noexcept
-	{
-		rr_rotate( nd->right );
-		ll_rotate( nd );
-	}
-
-	/**
-	 * Left-right double rotation
-	 */
-	void lr_rotate( Node*& nd ) noexcept
-	{
-		ll_rotate( nd->left );
-		rr_rotate( nd );
-	}
 // ***************************************************************
 
 private:
@@ -409,7 +377,7 @@ private:
 		else
 			prev->left  = temp;
 
-		insert_fixup( value, nd );
+		insert_fixup( nd );
 	}
 
 	/**
