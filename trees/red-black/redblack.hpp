@@ -6,6 +6,7 @@
 #include <exception>
 #include <tuple>
 #include <queue>
+#include <initializer_list>
 
 // RBtree class
 //
@@ -75,6 +76,17 @@ public:
 	}
 
 	/**
+	 * Init list contructor
+	 */
+	RBtree( std::initializer_list<T> lst )
+	{
+		for(auto x : lst)
+		{
+			insert( x );
+		}
+	}
+
+	/**
 	 * Destructor
 	 */
 	~RBtree( ) noexcept
@@ -132,6 +144,45 @@ public:
 	bool contains( const T& value ) const noexcept
 	{
 		return contains( value, root );
+	}
+
+	/**
+	* Print values level by level, left-to-right
+	*/
+	std::ostream& levelprint( std::ostream& os ) const
+	{
+		Node *nd = root;
+
+		if ( nd == NIL ) 
+		{
+			return os << "Empty";
+		}
+
+		std::queue<Node *> q;
+		q.push( nd );
+
+		T min = nd->value;
+		os << "\n";
+
+		while ( !q.empty() )
+		{
+			nd = q.front();
+			q.pop();
+
+			if ( nd->left !=  NIL )
+				q.push( nd->left  );
+			if ( nd->right != NIL )
+				q.push( nd->right );
+
+			if( nd->value < min )
+			{
+				min = nd->value;
+				os << "\n";
+			} 
+			os << nd->value << " ";
+		}
+
+		return os;
 	}
 
 	/**
@@ -449,7 +500,7 @@ private:
 	void RBremove( Node* nd )
 	{
 		Node* replacement = nd;
-		Color orginal = replacement->color;
+		Color original = replacement->color;
 		Node *broken;
 		if ( nd->left == NIL )
 			// if only right child is present
@@ -470,11 +521,11 @@ private:
 		else
 			// in case it has two notnull nodes
 		{
-			replacement = find_min( nd->right );
+			replacement = find_max( nd->left );
 			// replace it with  minimal node of right subtree
 			original = replacement->color;
 			// but keep it's original color
-			broken = replacement->right;
+			broken = replacement->left;
 
 			if ( replacement->parent == nd )
 				// if minimal of right subtree is child of nd
@@ -484,18 +535,18 @@ private:
 			else
 				// if minimal of right subtree is not child of nd
 			{
-				RBtransplant( replacement, replacement->right );
+				RBtransplant( replacement, replacement->left );
 				// move replacement->right in place of replacement
-				replacement->right = nd->right;
-				replacement->right->parent = replacement;
+				replacement->left = nd->left;
+				replacement->left->parent = replacement;
 				// and set replacement in placement of deleted node
 			}
 
 			RBtransplant( nd, replacement );
 			// move replacement to nd
 
-			replacement->left = nd->left;
-			replacement->left->parent = replacement;
+			replacement->right = nd->right;
+			replacement->right->parent = replacement;
 			replacement->color = nd->color;
 			// and change it's data to nd's data
 		}
@@ -512,7 +563,7 @@ private:
 	/**
 	 * Fix color properties of red-black tree
 	 */
-	remove_fixup( Node* broken )
+	void remove_fixup( Node* broken )
 	{
 		// broken should be black, because if red nodes are
 		// removed then there are no rbtree's rule violations
@@ -545,7 +596,7 @@ private:
 					// [2] if both sibling children is black
 					// and sibling is black too( case 1 takes care of this )
 				{
-					sibiling->color = Color::RED;
+					sibling->color = Color::RED;
 					// change it's color to red
 					broken = broken->parent;
 					// and move up the tree
@@ -609,7 +660,7 @@ private:
 					// [2] if both sibling children is black
 					// and sibling is black too( case 1 takes care of this )
 				{
-					sibiling->color = Color::RED;
+					sibling->color = Color::RED;
 					// change it's color to red
 					broken = broken->parent;
 					// and move up the tree
@@ -683,6 +734,28 @@ private:
 			prev->left  = temp;
 
 		insert_fixup( temp );
+	}
+
+	/**
+	 * Find and remove value from tree, keep it balanced
+	 */
+	void remove( const T & value, Node * nd ) noexcept
+	{
+		Node* temp = nd;
+
+		while ( true )
+		{
+			if (value == temp->value ) break;
+
+			if ( value > temp->value )
+				temp = temp->right;
+			else
+				temp = temp->left ;
+
+			if ( temp->left == NIL || temp->right == NIL ) return;
+		}
+
+		RBremove( temp );
 	}
 
 	/**
