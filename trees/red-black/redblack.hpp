@@ -514,6 +514,141 @@ private:
 	 */
 	remove_fixup( Node* broken )
 	{
+		// broken should be black, because if red nodes are
+		// removed then there are no rbtree's rule violations
+		while ( broken->color == Color::BLACK && broken != root )
+			// while not root and not black node
+		{
+			if ( broken == broken->parent->left )
+				// if it is left child that is broken
+			{
+				Node* sibling = broken->parent->right;
+				if ( sibling->color == Color::RED )
+					// [1] if broken's sibling colored red,
+					// then it's children are both black
+				{
+					broken->parent->color = Color::RED;
+					sibling->color = Color::BLACK;
+					// switch colors
+					ll_rotate( broken->parent );
+					// and left rotate
+					sibling = broken->parent->right;
+					// update so now sibling's previous left child
+					// is sibling ( move the parent's right subtree up )
+
+					// now sibling is  black
+					// go to cases (2) or (3 or 4)
+					// parent is black now
+				}
+				if ( sibling->right->color == Color::BLACK &&
+				        sibling->left->color == Color::BLACK )
+					// [2] if both sibling children is black
+					// and sibling is black too( case 1 takes care of this )
+				{
+					sibiling->color = Color::RED;
+					// change it's color to red
+					broken = broken->parent;
+					// and move up the tree
+
+					// now sibling is red
+					continue;
+					// repeat while loop
+				}
+				else if ( sibling->right->color == Color::BLACK )
+					// [3] if left sibling child is red
+					// and right is black
+					// and sibling is black too( case 1 takes care of this )
+				{
+					sibling->left->color = Color::BLACK;
+					sibling->color = Color::RED;
+					// switch colors
+					rr_rotate( sibling );
+					// and rotate without rbtree's rules violations
+					sibling = broken->parent->right;
+					// upadte sibling
+
+					// now sibling is black and it's
+					// left child is black
+					// right child is red
+					// parent is the same( black from 1st case )
+				}
+				// [4] if right sibling child is red
+				// and left is black
+				// sibling itself is black too
+				// parent is black
+				sibling->color = broken->parent->color;
+				broken->parent->color = Color::BLACK;
+				sibling->right->color = Color::BLACK;
+				ll_rotate( broken->parent );
+				broken = root;
+			}
+			else
+				// if right child is broken
+			{
+
+				Node* sibling = broken->parent->left;
+				if ( sibling->color == Color::RED )
+					// [1] if broken's sibling colored red,
+					// then it's children are both black
+				{
+					broken->parent->color = Color::RED;
+					sibling->color = Color::BLACK;
+					// switch colors
+					ll_rotate( broken->parent );
+					// and right rotate
+					sibling = broken->parent->left;
+					// update so now sibling's previous right child
+					// is sibling ( move the parent's left subtree up )
+
+					// now sibling is  black
+					// go to cases (2) or (3 or 4)
+					// parent is black now
+				}
+				if ( sibling->left->color == Color::BLACK &&
+				        sibling->right->color == Color::BLACK )
+					// [2] if both sibling children is black
+					// and sibling is black too( case 1 takes care of this )
+				{
+					sibiling->color = Color::RED;
+					// change it's color to red
+					broken = broken->parent;
+					// and move up the tree
+
+					// now sibling is red
+					continue;
+					// repeat while loop
+				}
+				else if ( sibling->left->color == Color::BLACK )
+					// [3] if right sibling child is red
+					// and left is black
+					// and sibling is black too( case 1 takes care of this )
+				{
+					sibling->right->color = Color::BLACK;
+					sibling->color = Color::RED;
+					// switch colors
+					rr_rotate( sibling );
+					// and rotate without rbtree's rules violations
+					sibling = broken->parent->left;
+					// upadte sibling
+
+					// now sibling is black and it's
+					// right child is black
+					// left child is red
+					// parent is the same( black from 1st case )
+				}
+				// [4] if left sibling child is red
+				// and right is black
+				// sibling itself is black too
+				// parent is black
+				sibling->color = broken->parent->color;
+				broken->parent->color = Color::BLACK;
+				sibling->left->color = Color::BLACK;
+				ll_rotate( broken->parent );
+				broken = root;
+			}
+		}
+
+		broken->color = Color::BLACK;
 
 	}
 
@@ -548,36 +683,6 @@ private:
 			prev->left  = temp;
 
 		insert_fixup( temp );
-	}
-
-	/**
-	 * Find and remove value from tree, keep it balanced
-	 */
-	void remove( const T & value, Node * & nd ) noexcept
-	{
-		if ( nd == NIL )
-			return;   // Item not found; do nothing
-
-		if ( value < nd->value )
-		{
-			remove( value, nd->left );
-		}
-		else if ( nd->value < value )
-		{
-			remove( value, nd->right );
-		}
-		else if ( nd->left != NIL && nd->right != NIL ) // Two children
-		{
-			nd->value = find_min( nd->right )->value;
-			remove( nd->value, nd->right );
-		}
-		else
-		{
-			Node *oldnode = nd;
-			nd = ( nd->left != NIL ) ? nd->left : nd->right;
-			delete oldnode;
-			return;
-		}
 	}
 
 	/**
