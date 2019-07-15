@@ -51,13 +51,14 @@ public:
 	}
 };
 
-int main()
+int main() 
 {
 	// cout << "Insert number of nodes: \n";
 	int nd_num;
 	// cin >> nd_num;
 
 	RBtree<int> tr { 20, 10, 5, 30, 40 };
+	
 	int value;
 	// while ( nd_num-- )
 	// {
