@@ -1,3 +1,8 @@
+/**
+ * Solution for Waiter problem on Hackerrank:
+ * https://www.hackerrank.com/challenges/waiter/problem
+ */
+
 #include <bits/stdc++.h>
 
 using namespace std;
