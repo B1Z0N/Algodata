@@ -5,11 +5,16 @@ using namespace std;
 vector<string> split_string(string);
 
 int next_prime( )
+// function to compute next prime starting from 2
 {
     static auto is_prime { []( int num ) {
-        for( int i = 2; i <= std::sqrt( num ); i++)
+        // is num a prime number, made static
+        // so that it takes the same memory as 
+        // global function, but it's name is hidden
+        // in outer function (next_prime)
+        for ( int i = 2; i <= std::sqrt( num ); i++)
         {
-            if( num % i == 0 ) return false;
+            if ( num % i == 0 ) return false;
         }
 
         return true;
@@ -17,9 +22,9 @@ int next_prime( )
 
     static int latest = 1;
     latest++;
-    while( !is_prime( latest ) ) latest++;
+    while ( !is_prime( latest ) ) latest++;
+    // find next prime number
 
-    cout << latest << " ";
     return latest;
 }
 
@@ -28,41 +33,69 @@ int next_prime( )
  */
 vector<int> waiter(vector<int> A, int q) {
     vector<int> result;
+    // resulting array of plates, in order suitable for printing
     vector<int> nextB;
+    // array for B[i]
+    // we don't need q B-arrays, just one `result` array,
+    // in the end of each iteration nextB are pushed to result array
     vector<int> nextA;
+    // array denoting A[i], whereas A means A[i - 1]
 
-    while( q-- )
+    while ( q-- )
+        // q iterations
     {
         int prime = next_prime();
+        // get the i-th prime number
 
-        while( !A.empty() )
+        while ( !A.empty() )
+            // while A[i - 1] not empty
         {
-            if( A.back() % prime )
+            if ( A.back() % prime )
+                // if top of the stack is not divisible by i-th prime
                 nextA.push_back( A.back() );
+            // push it to the A[i]
             else
-            {
+                // if top of the stack is divisible by i-th prime
                 nextB.push_back( A.back() );
-            }
+            // push it to the B[i]
 
             A.pop_back();
+            // and don't forget to pop it from the top
         }
 
-        while( !nextB.empty() )
+        while ( !nextB.empty() )
+            // then while B[i] not empty
         {
             result.push_back( nextB.back() );
             nextB.pop_back();
+            // move it from top of B[i] to `result`
+            // in appropriate format, as stated in the
+            // problem description
         }
 
         std::swap( A, nextA );
+        // swap A[i-1] (which is empty) with A[i] (which is ready for next iteration)
+        // A[i-1] will become A[i] in the next iteration
     }
 
-    while( !A.empty() )
+    // when all iterations are done
+    // all B[i] are pushed to `result` array
+    // and ready for output
+    // there are only A[q] array left to push
+
+    while ( !A.empty() )
+        // while A[q] not empty
     {
         result.push_back( A.back() );
         A.pop_back();
+        // move it from top of A[q] to result
+        // so that result is now ready for printing
+        // in appropriate format, as stated in the
+        // problem description
     }
 
     return result;
+    // return the whole array
 }
 
 int main()
@@ -93,7 +126,7 @@ int main()
 
     vector<int> result = waiter(number, q);
 
-    for( auto val : result )
+    for ( auto val : result )
     {
         fout << val << "\n";
     }
