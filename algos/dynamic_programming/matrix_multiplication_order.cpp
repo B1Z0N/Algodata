@@ -41,36 +41,24 @@ void output( int, const char* fname = nullptr );
 int __cut_the_rod( const std::vector<int>& costs, std::vector<int>& visited, int len)
 {
 	if( len == 1 )
-		// whole rod, can't delete
 		return visited[0];
 
 	int cost = costs[ len - 1 ];
-	// try to sell it as is, not cutting
 	int next_cost;
 
 	for( int i = 1; i <= len / 2; i++ )
-	// loop to check only half
-	// because other half is symmetric
 	{
-		// try cutting 1, 2, 3 ...
-		// and find optimal
 		if( visited[ len - i - 1 ] != -1 )
-			// if we already found - use it
 			next_cost = visited[ len - i - 1 ];
 		else
-			// if no - go find it
 			next_cost = __cut_the_rod( costs, visited, len - i );
 
-		// plus cost of the pieace we are cutting
 		next_cost += costs[ i - 1 ];
 
 		if( cost < next_cost )
-			// assign maximal value
 			cost = next_cost;
 	}
 
-	// don't forget to set this
-	// as visited
 	visited[len - 1] = cost;
 	return cost;
 }
@@ -80,10 +68,9 @@ int __cut_the_rod( const std::vector<int>& costs, std::vector<int>& visited, int
 int cut_the_rod( std::vector<int> costs )
 {
 	std::vector<int> visited ( costs.size() );
-	// vector of already found optimal costs 
 	for( auto& x : visited ) x = -1;
 	visited[0] = costs[0];
-	// rod of length 1 is optimally selled at cost of itself
+	visited.back() = costs.back();
 
 	return __cut_the_rod( costs, visited, costs.size() );
 }
