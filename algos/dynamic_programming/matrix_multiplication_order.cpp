@@ -3,11 +3,19 @@
 #include <vector>	// vector
 #include <fstream>	// ifstream
 #include <limits>	// numeric_limits<streamsize>::max
+#include <map>
+#include <tuple>
+
+struct Dims
+{
+	int rows;
+	int cols;
+};
 
 template <typename __Istream>
-std::vector<int> __input( __Istream&);
+std::vector<Dims> __input( __Istream&);
 
-std::vector<int> input( const char* fname = nullptr );
+std::vector<Dims> input( const char* fname = nullptr );
 
 template <typename __Ostream>
 void __output( __Ostream&, int );
@@ -15,71 +23,94 @@ void __output( __Ostream&, int );
 void output( int, const char* fname = nullptr );
 
 
-// @Problem
-// You have a rod and you need to cut it on pieces
-// of lengths, in a such way that it has the biggest
-// summary cost.
+// @Preface
+// When multiplying matrices, you could change parentheses
+// like this ( ( A1 * A2 ) * A3 ) = ( A1 * ( A2 * A3 ) )
+// so that matrix multiplication becomes more efficient
 //
-// You are given length/cost table and initial rod length.
+// @Problem
+// Change parentheses, so that multiplication became 
+// more efficient
 //
 // @Example
-// +--------+---+---+---+---+
-// | length | 1 | 2 | 3 | 4 |
-// +--------+---+---+---+---+
-// | price  | 2 | 5 | 3 | 8 |
-// +--------+---+---+---+---+
-// initial rod length is 4
-// the solution is 10 = 5 + 5 ( 2 pieces of length 2 )
+// A [ 5 x 10 ]
+// B [ 10 x 20 ]
+// C [ 20 x 5 ]
+// Solution:
+// ( A * B ) ~ 5 * 10 * 20 = 1000 mult.
+// ( B * C ) ~ 10 * 20 * 5 = 1000 mult.
+// ( A * ( B * C ) ) ~ 1250 multiplications
+// ( ( A * B ) * C ) ~ 1500 multiplications
+// Answer: 1250 multiplications
 //
 // @Input format
-// 4
-// 2 5 3 8
+// 3
+// 5 10
+// 10 20
+// 20 5
+
 
 /**
- * Recursive helper function
+ * Helper recursive function
  */
-int __cut_the_rod( const std::vector<int>& costs, std::vector<int>& visited, int len)
+int __parenthesise( 
+	const std::vector<Dims>& mtr, 
+	std::map<std::pair<int,int>, int>& visited,	
+	// visited intervals of matrices
+	// maps interval to minimal multiplication number
+	int start,
+	// interval start
+	int end 
+	// interval end
+	)
 {
-	if( len == 1 )
-		return visited[0];
+	if( visited.find( { start, end } ) != std::end( visited ) ) 
+		return visited[ { start, end } ];
 
-	int cost = costs[ len - 1 ];
-	int next_cost;
+	int right_mult = __parenthesise( mtr, visited, start + 1, end );
+	int left_mult  = __parenthesise( mtr, visited, start, end - 1 );
 
-	for( int i = 1; i <= len / 2; i++ )
+	int mult;
+	if( right_mult < left_mult )
 	{
-		if( visited[ len - i - 1 ] != -1 )
-			next_cost = visited[ len - i - 1 ];
-		else
-			next_cost = __cut_the_rod( costs, visited, len - i );
-
-		next_cost += costs[ i - 1 ];
-
-		if( cost < next_cost )
-			cost = next_cost;
+		mult = mtr[ start 	  ].rows * 
+			   mtr[ start 	  ].cols * 
+			   mtr[ start + 1 ].cols + 
+			   right_mult			 ;
+	}
+	else
+	{
+		mult = left_mult 		   +
+			   mtr[ start ].rows * 
+			   mtr[ end   ].rows * 
+			   mtr[ end   ].cols ;
 	}
 
-	visited[len - 1] = cost;
-	return cost;
+	visited[ { start, end } ] = mult;
+	return mult;
 }
+
 /**
  * Solution function
  */
-int cut_the_rod( std::vector<int> costs )
+int parenthesise( std::vector<Dims> mtr )
 {
-	std::vector<int> visited ( costs.size() );
-	for( auto& x : visited ) x = -1;
-	visited[0] = costs[0];
-	visited.back() = costs.back();
+	std::map<std::pair<int, int>, int> visited;
+	for( int i = 1; i < mtr.size(); i++ )
+		// initializing every pair of matrices
+		visited[ { i - 1, i } ] = mtr[ i - 1 ].rows * 
+								  mtr[ i - 1 ].cols * 
+								  mtr[   i	 ].cols ;
 
-	return __cut_the_rod( costs, visited, costs.size() );
+
+	return __parenthesise( mtr, visited, 0, mtr.size() - 1 );
 }
 
 
 int main()
 {
-	std::vector<int> costs { input() };
-	int res { cut_the_rod( costs ) };
+	std::vector<Dims> matrices { input() };
+	int res { parenthesise( matrices ) };
 	output( res );
 
 	return 0;
@@ -87,26 +118,25 @@ int main()
 
 
 template <typename __Istream>
-std::vector<int> __input( __Istream& in )
+std::vector<Dims> __input( __Istream& in )
 {
-	int n;
-	std::vector<int> costs;
+	int n, rows, cols;
+	std::vector<Dims> matrices;
 
 	in >> n;
 	// in.ignore( std::numeric_limits<std::streamsize>::max, '\n' );
 
 	while( n-- )
 	{
-		int cost;
-		in >> cost;
-		costs.push_back( cost );
+		in >> rows >> cols;
+		matrices.push_back( { rows, cols } );
 	}
 
-	return costs;
+	return matrices;
 }
 
 
-std::vector<int> input( const char* fname )
+std::vector<Dims> input( const char* fname )
 {
 	if( !fname )
 	{
@@ -115,10 +145,10 @@ std::vector<int> input( const char* fname )
 	else
 	{
 		std::ifstream ifs { fname, std::ofstream::in };
-		std::vector<int> costs { __input( ifs ) };
+		std::vector<Dims> matrices { __input( ifs ) };
 		ifs.close();
 
-		return costs; 
+		return matrices; 
 	}
 } 
 
