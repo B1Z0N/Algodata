@@ -37,11 +37,20 @@ void output( int, const char* fname = nullptr );
 // 2 5 3 8
 
 
+/**
+ * Solution function
+ */
+int cut_the_rod( std::vector<int> costs )
+{
+	return 3;
+}
+
+
 int main()
 {
 	std::vector<int> costs { input() };
 	int res { cut_the_rod( costs ) };
-	output( res );
+	output( 3 );
 
 	return 0;
 }
@@ -54,7 +63,7 @@ std::vector<int> __input( __Istream& in )
 	std::vector<int> costs;
 
 	in >> n;
-	in.ignore( std::numeric_limits<std::streamsize>::max, '\n' );
+	// in.ignore( std::numeric_limits<std::streamsize>::max, '\n' );
 
 	while( n-- )
 	{
@@ -71,13 +80,13 @@ std::vector<int> input( const char* fname )
 {
 	if( !fname )
 	{
-		return __input( cin );
+		return __input( std::cin );
 	}
 	else
 	{
-		std::ofstream ifs { fname, std::ofstream::in };
+		std::ifstream ifs { fname, std::ofstream::in };
 		std::vector<int> costs { __input( ifs ) };
-		ofs.close();
+		ifs.close();
 
 		return costs; 
 	}
@@ -95,7 +104,7 @@ void output( int res, const char* fname )
 {
 	if( !fname )
 	{
-		__output( os, res );
+		__output( std::cout, res );
 	}
 	else
 	{
