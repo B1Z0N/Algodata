@@ -15,6 +15,7 @@ void __output( __Ostream&, int );
 
 void output( int, const char* fname = nullptr );
 
+
 // @Problem
 // You have a rod and you need to cut it on pieces
 // of lengths, in a such way that it has the biggest
@@ -65,6 +66,7 @@ std::vector<int> __input( __Istream& in )
 	return costs;
 }
 
+
 std::vector<int> input( const char* fname )
 {
 	if( !fname )
@@ -87,6 +89,7 @@ void __output( __Ostream& os, int res )
 {
 	os << res;
 }
+
 
 void output( int res, const char* fname )
 {
