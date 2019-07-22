@@ -29,7 +29,7 @@ void output( int, const char* fname = nullptr );
 // so that matrix multiplication becomes more efficient
 //
 // @Problem
-// Change parentheses, so that multiplication became 
+// Change parentheses, so that multiplication became
 // more efficient
 //
 // @Example
@@ -53,41 +53,39 @@ void output( int, const char* fname = nullptr );
 /**
  * Helper recursive function
  */
-int __parenthesise( 
-	const std::vector<Dims>& mtr, 
-	std::map<std::pair<int,int>, int>& visited,	
-	// visited intervals of matrices
-	// maps interval to minimal multiplication number
-	int start,
-	// interval start
-	int end 
-	// interval end
-	)
+int __parenthesise(
+    const std::vector<Dims>& mtr,
+    std::map<std::pair<int, int>, int>& visited,
+    // visited intervals of matrices
+    // maps interval to minimal multiplication number
+    int start,
+    // interval start
+    int end
+    // interval end
+)
 {
-	if( visited.find( { start, end } ) != std::end( visited ) ) 
+	if ( visited.find( { start, end } ) != std::end( visited ) )
+		// if we've already calculated minimal multiplications for this case
 		return visited[ { start, end } ];
 
 	int right_mult = __parenthesise( mtr, visited, start + 1, end );
+	// A1 * ( A2 * ... * An )
 	int left_mult  = __parenthesise( mtr, visited, start, end - 1 );
+	// (A1 * ... * An-1 ) * An
 
-	int mult;
-	if( right_mult < left_mult )
-	{
-		mult = mtr[ start 	  ].rows * 
-			   mtr[ start 	  ].cols * 
-			   mtr[ start + 1 ].cols + 
-			   right_mult			 ;
-	}
-	else
-	{
-		mult = left_mult 		   +
-			   mtr[ start ].rows * 
-			   mtr[ end   ].rows * 
-			   mtr[ end   ].cols ;
-	}
+	right_mult += mtr[ start ].rows *
+	              mtr[ start ].cols *
+	              mtr[ end   ].cols ;
 
-	visited[ { start, end } ] = mult;
-	return mult;
+	left_mult  += mtr[ start ].rows *
+	              mtr[  end  ].rows *
+	              mtr[  end  ].cols ;
+    // now add appropriate matrix multiplication costs
+    int min_mult = std::min( right_mult, left_mult );
+    // and find minimal cost
+	visited[ { start, end } ] = min_mult;
+	// mark case as calculated
+	return min_mult;
 }
 
 /**
@@ -96,11 +94,11 @@ int __parenthesise(
 int parenthesise( std::vector<Dims> mtr )
 {
 	std::map<std::pair<int, int>, int> visited;
-	for( int i = 1; i < mtr.size(); i++ )
+	for ( int i = 1; i < mtr.size(); i++ )
 		// initializing every pair of matrices
-		visited[ { i - 1, i } ] = mtr[ i - 1 ].rows * 
-								  mtr[ i - 1 ].cols * 
-								  mtr[   i	 ].cols ;
+		visited[ { i - 1, i } ] = mtr[ i - 1 ].rows *
+		                          mtr[ i - 1 ].cols *
+		                          mtr[   i	 ].cols ;
 
 
 	return __parenthesise( mtr, visited, 0, mtr.size() - 1 );
@@ -126,7 +124,7 @@ std::vector<Dims> __input( __Istream& in )
 	in >> n;
 	// in.ignore( std::numeric_limits<std::streamsize>::max, '\n' );
 
-	while( n-- )
+	while ( n-- )
 	{
 		in >> rows >> cols;
 		matrices.push_back( { rows, cols } );
@@ -138,7 +136,7 @@ std::vector<Dims> __input( __Istream& in )
 
 std::vector<Dims> input( const char* fname )
 {
-	if( !fname )
+	if ( !fname )
 	{
 		return __input( std::cin );
 	}
@@ -148,9 +146,9 @@ std::vector<Dims> input( const char* fname )
 		std::vector<Dims> matrices { __input( ifs ) };
 		ifs.close();
 
-		return matrices; 
+		return matrices;
 	}
-} 
+}
 
 
 template <typename __Ostream>
@@ -162,7 +160,7 @@ void __output( __Ostream& os, int res )
 
 void output( int res, const char* fname )
 {
-	if( !fname )
+	if ( !fname )
 	{
 		__output( std::cout, res );
 	}
