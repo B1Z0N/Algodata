@@ -4,7 +4,6 @@
 #include <fstream>	// ifstream
 #include <limits>	// numeric_limits<streamsize>::max
 
-
 template <typename __Istream>
 std::vector<int> __input( __Istream&);
 
@@ -36,13 +35,44 @@ void output( int, const char* fname = nullptr );
 // 4
 // 2 5 3 8
 
+/**
+ * Recursive helper function
+ */
+int __cut_the_rod( const std::vector<int>& costs, std::vector<int>& visited, int len)
+{
+	if( len == 1 )
+		return visited[0];
 
+	int cost = costs[ len - 1 ];
+	int next_cost;
+
+	for( int i = 1; i <= len / 2; i++ )
+	{
+		if( visited[ len - i - 1 ] != -1 )
+			next_cost = visited[ len - i - 1 ];
+		else
+			next_cost = __cut_the_rod( costs, visited, len - i );
+
+		next_cost += costs[ i - 1 ];
+
+		if( cost < next_cost )
+			cost = next_cost;
+	}
+
+	visited[len - 1] = cost;
+	return cost;
+}
 /**
  * Solution function
  */
 int cut_the_rod( std::vector<int> costs )
 {
-	return 3;
+	std::vector<int> visited ( costs.size() );
+	for( auto& x : visited ) x = -1;
+	visited[0] = costs[0];
+	visited.back() = costs.back();
+
+	return __cut_the_rod( costs, visited, costs.size() );
 }
 
 
@@ -50,7 +80,7 @@ int main()
 {
 	std::vector<int> costs { input() };
 	int res { cut_the_rod( costs ) };
-	output( 3 );
+	output( res );
 
 	return 0;
 }
