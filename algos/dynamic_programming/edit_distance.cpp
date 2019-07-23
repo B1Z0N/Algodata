@@ -3,9 +3,10 @@
 #include <vector>	// vector
 #include <fstream>	// ifstream
 #include <limits>	// numeric_limits<streamsize>::max
-#include <map>
-#include <tuple>
+#include <unordered_map>
 #include <string>
+#include <functional> // hash
+
 
 template <typename __Istream>
 std::string __input( __Istream&);
@@ -53,13 +54,74 @@ void output( int, const char* fname = nullptr );
 // @Output format
 // 5
 
+struct EditIntervals
+// structure to denote substrings
+// to find edit_distance of 
+// a[0..end1] and b[0..end2]
+{
+	int end1;
+	int end2;
+
+	friend bool operator==( const EditIntervals& a, const EditIntervals& b)
+	{
+		return a.end1 == b.end1 && a.end2 == b.end2;
+	}
+};
+
+class EditIntervalsHash
+// hash functor for unordered_map
+{
+public:
+	size_t operator()( const EditIntervals& ivls ) const
+	{
+		return std::hash<int>{}( ivls.end1 ) ^ std::hash<int>{}( ivls.end2 );
+	}
+};
+
+int min( int a, int b, int c )
+{
+	return std::min( std::min( a, b ), c ); 
+} 
+
+/**
+ * Recursive helper function
+ */
+int __edit_distance( const std::string& a, const std::string& b, 
+	std::unordered_map<EditIntervals, int, EditIntervalsHash>& visited, 
+	int enda, int endb )
+{
+	if( visited.find( { enda, endb } ) != std::end( visited ) )
+		// if already calculated - return it
+		return visited[ { enda, endb } ];
+
+	if ( enda == 0 ) return endb;
+	if ( endb == 0 ) return enda;
+
+	if( a[ enda - 1 ] == b[ endb - 1 ] ) 
+	{
+		visited[ { enda, endb } ] = __edit_distance( a, b, visited, enda - 1, endb - 1 );
+
+		return visited[ { enda, endb } ];
+	}
+
+	visited[ { enda, endb } ] = min( 
+			__edit_distance( a, b, visited, enda 	, endb - 1 ), // insert
+			__edit_distance( a, b, visited, enda - 1, endb     ), // remove
+			__edit_distance( a, b, visited, enda - 1, endb - 1 )  // replace
+		) + 1;
+
+	return visited[ { enda, endb } ];
+}
 
 /**
  * Solution function
  */
 int edit_distance( std::string a, std::string b )
 {
+	int cost = 0;
+	std::unordered_map<EditIntervals, int, EditIntervalsHash> visited;
 
+	return __edit_distance( a, b, visited, a.size(), b.size() );
 }
 
 int main()
