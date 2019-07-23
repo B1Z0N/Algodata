@@ -48,6 +48,9 @@ void output( int, const char* fname = nullptr );
 // 5 10
 // 10 20
 // 20 5
+// 
+// @Output format
+// 1250
 
 
 /**
@@ -68,9 +71,7 @@ int __parenthesise(
 		// if we've already calculated minimal multiplications for this case
 		return visited[ { start, end } ];
 	else if ( start == end )
-	{
 		return 0;
-	}
 
 	int mult { -1 };
 	int next_mult;
