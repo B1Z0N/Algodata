@@ -67,25 +67,26 @@ int __parenthesise(
 	if ( visited.find( { start, end } ) != std::end( visited ) )
 		// if we've already calculated minimal multiplications for this case
 		return visited[ { start, end } ];
+	else if ( start == end )
+	{
+		return 0;
+	}
 
-	int right_mult = __parenthesise( mtr, visited, start + 1, end );
-	// A1 * ( A2 * ... * An )
-	int left_mult  = __parenthesise( mtr, visited, start, end - 1 );
-	// (A1 * ... * An-1 ) * An
+	int mult { -1 };
+	int next_mult;
+	for ( int i = start; i < end; i++ )
+	{
+		next_mult = __parenthesise( mtr, visited, start, i   ) +
+		            __parenthesise( mtr, visited, i + 1, end ) +
+		            mtr[ start ].rows * mtr[ i ].cols * mtr[ end ].cols;
 
-	right_mult += mtr[ start ].rows *
-	              mtr[ start ].cols *
-	              mtr[ end   ].cols ;
+		if ( mult > next_mult || mult == -1 )
+			mult = next_mult;
+	}
 
-	left_mult  += mtr[ start ].rows *
-	              mtr[  end  ].rows *
-	              mtr[  end  ].cols ;
-    // now add appropriate matrix multiplication costs
-    int min_mult = std::min( right_mult, left_mult );
-    // and find minimal cost
-	visited[ { start, end } ] = min_mult;
+	visited[ { start, end } ] = mult;
 	// mark case as calculated
-	return min_mult;
+	return mult;
 }
 
 /**
