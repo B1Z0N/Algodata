@@ -71,6 +71,7 @@ int __parenthesise(
 		// if we've already calculated minimal multiplications for this case
 		return visited[ { start, end } ];
 	else if ( start == end )
+		// if it is single matrix( needed in for loop )
 		return 0;
 
 	int mult { -1 };
@@ -80,8 +81,13 @@ int __parenthesise(
 		next_mult = __parenthesise( mtr, visited, start, i   ) +
 		            __parenthesise( mtr, visited, i + 1, end ) +
 		            mtr[ start ].rows * mtr[ i ].cols * mtr[ end ].cols;
+		// test all possible cases, example for 4 matrices:
+		// ( A * ( B * C * D ) )
+		// ( ( A * B ) * ( C * D ) )
+		// ( ( A * B * C ) * D )
 
 		if ( mult > next_mult || mult == -1 )
+			// find minimal
 			mult = next_mult;
 	}
 
