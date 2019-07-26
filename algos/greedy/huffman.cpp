@@ -5,14 +5,15 @@
 #include <limits>	// numeric_limits<streamsize>::max
 
 template <typename __Istream>
-std::vector<int> __input( __Istream&);
+std::string __input( __Istream&);
 
-std::vector<int> input( const char* fname = nullptr );
+std::string input( const char* fname = nullptr );
 
 template <typename __Ostream>
-void __output( __Ostream&, int );
+void __output( __Ostream&, const std::string& );
 
-void output( int, const char* fname = nullptr );
+void output( const std::string&, const char* fname = nullptr );
+
 
 //------------------------------------------------------------------
 // @Problem
@@ -93,91 +94,66 @@ void output( int, const char* fname = nullptr );
 // 1001100111
 //-----------------------------------------------------------------------------
 
-/**
- * Recursive helper function
+
+/** 
+ * Structure to represent tree node
  */
-int __cut_the_rod( const std::vector<int>& costs, std::vector<int>& visited, int len)
+struct Node
 {
-	if( len == 1 )
-		// whole rod, can't delete
-		return visited[0];
+	Node* left {};
+	Node* right {};
 
-	int cost = costs[ len - 1 ];
-	// try to sell it as is, not cutting
-	int next_cost;
+	char val;
+	int freq;
+};
 
-	for( int i = 1; i <= len / 2; i++ )
-	// loop to check only half
-	// because other half is symmetric
-	{
-		// try cutting 1, 2, 3 ...
-		// and find optimal
-		if( visited[ len - i - 1 ] != -1 )
-			// if we already found - use it
-			next_cost = visited[ len - i - 1 ];
-		else
-			// if no - go find it
-			next_cost = __cut_the_rod( costs, visited, len - i );
-
-		// plus cost of the pieace we are cutting
-		next_cost += costs[ i - 1 ];
-
-		if( cost < next_cost )
-			// assign maximal value
-			cost = next_cost;
-	}
-
-	// don't forget to set this
-	// as visited
-	visited[len - 1] = cost;
-	return cost;
-}
 /**
- * Solution function
+ * Solution function ( encoding )
  */
-int cut_the_rod( std::vector<int> costs )
+std::string Huffman_encode( std::vector<std::pair<char, int>> data )
 {
-	std::vector<int> visited ( costs.size() );
-	// vector of already found optimal costs 
-	for( auto& x : visited ) x = -1;
-	visited[0] = costs[0];
-	// rod of length 1 is optimally selled at cost of itself
+	auto greater { 
+		[ ] ( const Node* fst, const Node* snd ) { return fst->freq > snd->freq } 
+	};
+	std::priority_queue<Node *, std::vector<Node*>, greater> pq;
+	for( auto& nd : data )
+		pq.push( new Node { nullptr, nullptr, nd.first, nd.second } );
 
-	return __cut_the_rod( costs, visited, costs.size() );
+	
 }
+
+// /**
+//  * Solution function ( decoding )
+//  */ 
+// std::string Huffman_decode( std::vector<HuffmanData<char>> nodes )
+// {
+
+// }
 
 
 int main()
 {
-	std::vector<int> costs { input() };
-	int res { cut_the_rod( costs ) };
-	output( res );
+	std::string text { input() };
+	std::string encoded { Huffman( structurify( text ) ) };
+	output( encoded );
 
 	return 0;
 }
 
 
 template <typename __Istream>
-std::vector<int> __input( __Istream& in )
+std::string __input( __Istream& in )
 {
-	int n;
-	std::vector<int> costs;
-
-	in >> n;
+	std::string costs;
 	// in.ignore( std::numeric_limits<std::streamsize>::max, '\n' );
 
-	while( n-- )
-	{
-		int cost;
-		in >> cost;
-		costs.push_back( cost );
-	}
+	in >> costs;
 
 	return costs;
 }
 
 
-std::vector<int> input( const char* fname )
+std::string input( const char* fname )
 {
 	if( !fname )
 	{
@@ -186,31 +162,31 @@ std::vector<int> input( const char* fname )
 	else
 	{
 		std::ifstream ifs { fname, std::ofstream::in };
-		std::vector<int> costs { __input( ifs ) };
+		std::string text { __input( ifs ) };
 		ifs.close();
 
-		return costs; 
+		return text; 
 	}
 } 
 
 
 template <typename __Ostream>
-void __output( __Ostream& os, int res )
+void __output( __Ostream& os, const std::string& encoded )
 {
-	os << res;
+	os << encoded;
 }
 
 
-void output( int res, const char* fname )
+void output( const std::string& encoded, const char* fname )
 {
 	if( !fname )
 	{
-		__output( std::cout, res );
+		__output( std::cout, encoded );
 	}
 	else
 	{
 		std::ofstream ofs { fname };
-		__output( ofs, res );
+		__output( ofs, encoded );
 		ofs.close();
 	}
 }
