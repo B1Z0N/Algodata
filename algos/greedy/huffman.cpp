@@ -3,6 +3,10 @@
 #include <vector>	// vector
 #include <fstream>	// ifstream
 #include <limits>	// numeric_limits<streamsize>::max
+#include <memory>
+#include <queue>
+#include <map>
+
 
 template <typename __Istream>
 std::string __input( __Istream&);
@@ -100,20 +104,25 @@ void output( const std::string&, const char* fname = nullptr );
  */
 struct Node
 {
-	uNodeptr left;
-	std::unqiue_ptr<Node> right;
+	std::shared_ptr<Node> left { };
+	std::shared_ptr<Node> right { };
 
 	char val;
 	int freq;
+
+	Node( char val, int freq ) 
+	: val{ val }, freq{ freq } { }
+
+	Node() = default;
 };
 
-using uNodeptr = std::unique_ptr<Node>;
+using uNodeptr = std::shared_ptr<Node>;
 
 struct uNodeptr_greater
 {
 	bool operator()( const uNodeptr& fst, const uNodeptr& snd )
-	{ 
-		return fst->freq > snd->freq 
+	{
+		return fst->freq > snd->freq;
 	}
 };
 
@@ -150,7 +159,7 @@ prioque frequentify( const std::string& text )
 			freqs[ c ] = 1;
 	}
 	for ( auto& nd : freqs )
-		pq.push( std::make_unique<Node>( nullptr, nullptr, nd.first, nd.second ) );
+		pq.push( std::make_shared<Node>( nd.first, nd.second ) );
 
 	return pq;
 }
@@ -159,9 +168,11 @@ prioque frequentify( const std::string& text )
 std::map<char, std::string>
 Huffman_build_encoding( prioque pq )
 {
-	uNodeptr root;
+	uNodeptr prev;
 	while ( true )
 	{
+		uNodeptr root = std::make_shared<Node>();
+		prev = root;
 		auto left  = pq.top(); pq.pop();
 		auto right = pq.top(); pq.pop();
 
@@ -175,7 +186,7 @@ Huffman_build_encoding( prioque pq )
 	}
 
 	std::map<char, std::string> table;
-	Huffman_table_from_tree( root, table, "" );
+	Huffman_table_from_tree( prev, table, "" );
 
 	return table;
 }
@@ -240,7 +251,6 @@ void __output( __Ostream & os, const std::string & encoded )
 {
 	os << encoded;
 }
-
 
 void output( const std::string & encoded, const char* fname )
 {
