@@ -112,8 +112,7 @@ struct Node
 
 	Node( char val, int freq ) 
 	: val{ val }, freq{ freq } { }
-
-	Node() = default;
+	Node( ) = default;
 };
 
 using uNodeptr = std::shared_ptr<Node>;
@@ -148,17 +147,23 @@ void Huffman_table_from_tree( uNodeptr& root, std::map<char, std::string>& table
 
 
 prioque frequentify( const std::string& text )
+// creates priority queue  of chars with 
+// the least frequency priority
+// from string of text
 {
 	prioque pq;
 	std::map<char, int> freqs;
 	for ( auto c : text )
+	// find frequencies
 	{
 		if ( freqs.find( c ) != std::end( freqs ) )
 			freqs[ c ] += 1;
 		else
 			freqs[ c ] = 1;
 	}
+
 	for ( auto& nd : freqs )
+		// push it to prioque
 		pq.push( std::make_shared<Node>( nd.first, nd.second ) );
 
 	return pq;
@@ -167,14 +172,18 @@ prioque frequentify( const std::string& text )
 
 std::map<char, std::string>
 Huffman_build_encoding( prioque pq )
+// get priority_queue of char-frequencie
+// return table of char-encoding
 {
 	uNodeptr prev;
 	while ( true )
 	{
 		uNodeptr root = std::make_shared<Node>();
 		prev = root;
+		// save tree root for future
 		auto left  = pq.top(); pq.pop();
 		auto right = pq.top(); pq.pop();
+		// get two minimal elements of a prioque
 
 		root->left = left;
 		root->right = right;
@@ -209,10 +218,9 @@ std::string Huffman_encode( const std::string & text )
 
 int main()
 {
-	std::string text { input() };
-	std::string encoded { Huffman_encode( text ) };
-	output( encoded );
-
+	output( Huffman_encode( input( ) ) );
+	std::cout << '\n';
+	
 	return 0;
 }
 
