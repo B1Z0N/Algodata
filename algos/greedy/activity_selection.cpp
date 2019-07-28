@@ -5,6 +5,7 @@
 #include <limits>	// numeric_limits<streamsize>::max
 #include <queue>
 #include <tuple>
+#include <unordered_map>
 
 
 //------------------------------------------------------------------------------------------
@@ -68,83 +69,90 @@ class ActivityQuery
 
 public:
 
-	ActivityQuery( std::vector<std::size_t> start, std::vector<std::size_t> end, std::vector<std::size_t> weight ) noexcept;
-	ActivityQuery( std::map<std::pair<std::size_t, std::size_t>, std::size_t> start_end_to_weight ) noexcept;
-	ActivityQuery( std::vector<Activity> actvt ) noexcept;
+	ActivityQuery( std::vector<std::size_t> start, std::vector<std::size_t> end, std::vector<std::size_t> weight )
+	{
+		for( int i = 0; i < start.size(); i++ )
+			quer.push_back( { start[i], end[i], weight[i] } );
+	}
+
+	ActivityQuery( std::unordered_multimap<std::pair<std::size_t, std::size_t>, std::size_t> start_end_to_weight )
+	{
+		for( auto& x : start_end_to_weight )
+			quer.push_back( { x.first.first, x.first.second, x.second } );
+	}
+
+	ActivityQuery( std::vector<Activity> actvt )
+	: quer{ actvt } { }
 
 	/**
 	 * Returns pair of selected ranges and max_weight
 	 * Calculated only first time, then just returns the result
 	 */
-	std::pair<std::vector<std::size_t>, std::size_t> solve( ) const;
+	std::pair<std::vector<std::size_t>, std::size_t> solve( ) const
+	{
+		if( max_weight == -1 )
+			__solve();
+
+		return { selection, max_weight };
+	}
+
+private:
+	void __solve() const;
 };
+
+
+std::ostream& sumout( std::ostream& os, ActivityQuery& aq );
 
 std::ostream& operator<<( std::ostream& os, ActivityQuery& aq );
 std::istream& operator>>( std::istream& is, ActivityQuery& aq );
+
 
 int main()
 {
 	auto actq;
 	std::cin >> actq;
-	actq.solve();
-	std::cout << actq << '\n';
+	sumout( std::cout, actq) << '\n';
 
 	return 0;
 }
 
 
-template <typename __Istream>
-std::pair<std::priority_queue<Material>, int> __input( __Istream & in )
+/**
+ * Algorithm of solution
+ */
+void ActivityQuery::__solve() const
 {
-	int capacity, n, price, weight;
-	std::priority_queue<Material> mtrls;
-	// in.ignore( std::numeric_limits<std::streamsize>::max, '\n' );
 
-	in >> capacity >> n;
+}
+
+std::ostream& sumout( std::ostream& os, ActivityQuery& aq )
+{
+	return os << aq.solve().second;	
+}
+
+std::istream& operator>>( std::istream& is, ActivityQuery& aq )
+{
+	std::vector<Activity> actvts;
+	Activity temp;
+
+	std::size_t n;
+	is >> n;
 
 	while( n-- )
 	{
-		in >> price >> weight;
-		mtrls.push( { price, weight } );
+		is >> temp.start >> temp.end >> temp.weight;
+		actvts.push_back( temp );
 	}
 
-	return { mtrls, capacity };
+	return is;
 }
 
-
-std::pair<std::priority_queue<Material>, int> input( const char* fname )
+std::ostream& operator<<( std::ostream& os, const ActivityQuery& aq)
 {
-	if ( !fname )
-	{
-		return __input( std::cin );
-	}
-	else
-	{
-		std::ifstream ifs { fname, std::ofstream::in };
-		auto mat_and_capacity { __input( ifs ) };
-		ifs.close();
-
-		return mat_and_capacity;
-	}
+	auto solution { aq.solve() };
+	for( const auto& x : solution.first )
+		os << x << ' ';
+	
+	return os << '\n' << solution.second;
 }
 
-
-template <typename __Ostream>
-void __output( __Ostream & os, int sum )
-{
-	os << sum;
-}
-
-void output( int sum, const char* fname )
-{
-	if ( !fname )
-	{
-		__output( std::cout, sum );
-	}
-	else
-	{
-		std::ofstream ofs { fname };
-		__output( ofs, sum );
-		ofs.close();
-	}
-}
