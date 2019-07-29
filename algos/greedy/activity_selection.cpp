@@ -63,22 +63,18 @@ struct Activity
  */
 class ActivityQuery
 {
-	std::vector<Activity> quer;
-	mutable std::vector<std::size_t> selection;
-	mutable std::size_t max_weight { -1 };
+	std::vector<Activity> quer {};
+	mutable std::vector<std::size_t> selection {};
+	mutable std::size_t max_weight {};
 
+	mutable bool calculated { false };
 public:
+	ActivityQuery( ) = default;
 
 	ActivityQuery( std::vector<std::size_t> start, std::vector<std::size_t> end, std::vector<std::size_t> weight )
 	{
 		for( int i = 0; i < start.size(); i++ )
 			quer.push_back( { start[i], end[i], weight[i] } );
-	}
-
-	ActivityQuery( std::unordered_multimap<std::pair<std::size_t, std::size_t>, std::size_t> start_end_to_weight )
-	{
-		for( auto& x : start_end_to_weight )
-			quer.push_back( { x.first.first, x.first.second, x.second } );
 	}
 
 	ActivityQuery( std::vector<Activity> actvt )
@@ -90,8 +86,11 @@ public:
 	 */
 	std::pair<std::vector<std::size_t>, std::size_t> solve( ) const
 	{
-		if( max_weight == -1 )
+		if( !calculated )
+		{
 			__solve();
+			calculated = true;
+		}
 
 		return { selection, max_weight };
 	}
@@ -109,7 +108,7 @@ std::istream& operator>>( std::istream& is, ActivityQuery& aq );
 
 int main()
 {
-	auto actq;
+	ActivityQuery actq { };
 	std::cin >> actq;
 	sumout( std::cout, actq) << '\n';
 
@@ -122,7 +121,13 @@ int main()
  */
 void ActivityQuery::__solve() const
 {
+	auto find_max_weight {
+		[ &this ] (  ) {
 
+		}
+	};
+
+	find_max_weight(  );
 }
 
 std::ostream& sumout( std::ostream& os, ActivityQuery& aq )
