@@ -5,7 +5,7 @@
 #include <limits>	// numeric_limits<streamsize>::max
 #include <queue>
 #include <tuple>
-#include <unordered_map>
+#include <algorithm>
 
 
 //------------------------------------------------------------------------------------------
@@ -63,11 +63,20 @@ struct Activity
  */
 class ActivityQuery
 {
-	std::vector<Activity> quer {};
-	mutable std::vector<std::size_t> selection {};
-	mutable std::size_t max_weight {};
+	std::vector<Activity> quer;
+	mutable std::size_t max_weight;
 
 	mutable bool calculated { false };
+
+	void sort()
+	{
+		std::sort( std::begin( quer ), std::end( quer ), 
+			[] (const Activity& fst, const Activity& snd)
+			{
+				return fst.end < snd.end;
+			}
+		);
+	}
 public:
 	ActivityQuery( ) = default;
 
@@ -75,16 +84,23 @@ public:
 	{
 		for( int i = 0; i < start.size(); i++ )
 			quer.push_back( { start[i], end[i], weight[i] } );
+
+		sort();
 	}
 
-	ActivityQuery( std::vector<Activity> actvt )
-	: quer{ actvt } { }
+	ActivityQuery( const std::vector<Activity>& actvt )
+	: quer{ actvt } { sort(); }
+
+	std::vector<Activity> get_activities() const
+	{
+		return quer;
+	}
 
 	/**
-	 * Returns pair of selected ranges and max_weight
+	 * Returns max_weight
 	 * Calculated only first time, then just returns the result
 	 */
-	std::pair<std::vector<std::size_t>, std::size_t> solve( ) const
+	std::size_t solve( ) const
 	{
 		if( !calculated )
 		{
@@ -92,25 +108,26 @@ public:
 			calculated = true;
 		}
 
-		return { selection, max_weight };
+		return max_weight;
 	}
 
 private:
 	void __solve() const;
 };
 
-
-std::ostream& sumout( std::ostream& os, ActivityQuery& aq );
-
-std::ostream& operator<<( std::ostream& os, ActivityQuery& aq );
+std::ostream& operator<<( std::ostream& os, const ActivityQuery& aq );
 std::istream& operator>>( std::istream& is, ActivityQuery& aq );
 
 
-int main()
+int main( int argc, char* argv[] )
 {
+	std::ifstream ifile { argv[1] };
+
 	ActivityQuery actq { };
-	std::cin >> actq;
-	sumout( std::cout, actq) << '\n';
+	ifile >> actq;
+	std::cout << actq << '\n';
+
+	ifile.close();
 
 	return 0;
 }
@@ -121,18 +138,50 @@ int main()
  */
 void ActivityQuery::__solve() const
 {
-	auto find_max_weight {
-		[ &this ] (  ) {
+	static auto left_activity_bsearch {
+		[this] ( std::size_t index ) -> int
+		{
+			std::size_t lo = 0, hi = index - 1;
+			while( lo <= hi )
+			{
+				std::size_t mid = ( lo + hi ) / 2;
 
+				if( quer[ mid ].end <= quer[ index ].start )
+				{
+					if( quer[ mid + 1 ].end <= quer[ index ].start )
+						lo = mid + 1;
+					else
+						return mid;
+				}
+				else
+					hi = mid - 1;
+			}
+
+			return -1;
 		}
 	};
 
-	find_max_weight(  );
-}
+	std::vector<std::size_t> sol ( quer.size() );
 
-std::ostream& sumout( std::ostream& os, ActivityQuery& aq )
-{
-	return os << aq.solve().second;	
+	sol[0] = quer[0].weight;
+	for( std::size_t i = 1; i < quer.size(); i++ )
+	{
+		std::size_t weight_with_current = quer[i].weight;
+		int j = left_activity_bsearch( i );
+
+		if( j != -1 ) weight_with_current += sol[j];
+
+		if( sol[ i - 1 ] > weight_with_current )
+		{
+			sol[ i ] = sol[ i - 1 ];
+		}
+		else
+		{
+			sol[ i ] = weight_with_current;
+		}
+	}
+
+	max_weight = sol.back();
 }
 
 std::istream& operator>>( std::istream& is, ActivityQuery& aq )
@@ -149,15 +198,13 @@ std::istream& operator>>( std::istream& is, ActivityQuery& aq )
 		actvts.push_back( temp );
 	}
 
+	aq = ActivityQuery { actvts };
+
 	return is;
 }
 
 std::ostream& operator<<( std::ostream& os, const ActivityQuery& aq)
 {
-	auto solution { aq.solve() };
-	for( const auto& x : solution.first )
-		os << x << ' ';
-	
-	return os << '\n' << solution.second;
+	return os << aq.solve();
 }
 
