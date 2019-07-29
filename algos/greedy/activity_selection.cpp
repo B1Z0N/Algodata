@@ -30,7 +30,31 @@
 // ║ finish ║ 5 ║ 11 ║ 6 ║ 7 ║ 6 ║ 10 ║
 // ║ weight ║ 4 ║  2 ║ 8 ║ 1 ║ 6 ║ 11 ║
 // ╚════════╩═══╩════╩═══╩═══╩═══╩════╝
-// 
+// 1. First of all, let's sort by end time in ascending order:
+// ╔════════╦═══╦═══╦═══╦═══╦════╦════╗
+// ║   i    ║ 1 ║ 2 ║ 3 ║ 4 ║ 5  ║ 6  ║
+// ╠════════╬═══╬═══╬═══╬═══╬════╬════╣
+// ║ start  ║ 4 ║ 2 ║ 5 ║ 3 ║  7 ║  9 ║
+// ║ finish ║ 5 ║ 6 ║ 6 ║ 7 ║ 10 ║ 11 ║
+// ║ weight ║ 4 ║ 8 ║ 6 ║ 1 ║ 11 ║  2 ║
+// ╚════════╩═══╩═══╩═══╩═══╩════╩════╝
+// 2. We should ask ouselves: "Should we include first activity?"
+// Of course we should, it is +4 in weight.
+// 3. Would it be better wih second activity or not?
+// with second activity we should discard our selection of first 
+// because they overlap. Let's do this, second activity is 8, 
+// it is more than 4 in first activity.
+// 4. Should we try it with 3rd? If we try it, then it overlaps
+// with 2nd, we discard it, and include 1st, as it is consistent,
+// finally our new weight will be 4 + 6 = 10 is bigger then 8, so
+// we take 1st and 3rd.
+// 5. With 4th we don't take it because 1 < 10
+// 6. With 5th we take it because it doesn't overlap with 
+// our previous selection(1 and 3), so we could plus it,
+// finally 10 + 11 = 21
+// 7. With 6th we don't take it because 10 + 2 = 12 < 21
+// 8. At the end of the day, we took 1st, 3rd and 5th, 
+// that is ANSWER: 21
 //
 // @Input format
 // 6
