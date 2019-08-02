@@ -50,7 +50,7 @@
 constexpr std::size_t sudoku_size = 9;
 constexpr std::size_t sudoku_empty = 0;
 
-using Grid = std::vector<std::vector<std::size_t>>;
+using Grid = std::array<std::array<std::size_t, sudoku_size>, sudoku_size>;
 
 std::ostream& operator<<( std::ostream& os, const Grid& gr ) {
 	for ( auto i : gr ) {
@@ -70,13 +70,13 @@ std::istream& operator>>( std::istream& is, Grid& gr ) {
 	// 	}
 	// }
 	std::size_t val;
-	gr.clear();
+	// gr.clear();
 
 	for ( std::size_t i = 0; i < sudoku_size; ++i ) {
-		gr.push_back( { } );
+		// gr.push_back( { } );
 		for ( std::size_t j = 0; j < sudoku_size; ++j ) {
 			is >> val;
-			gr[i].push_back( val );
+			gr[i][j] = val ;
 		}
 	}
 
