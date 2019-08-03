@@ -95,7 +95,7 @@ void output( const std::string&, const char* fname = nullptr );
 // cabad
 //
 // @Output
-// 1001100111
+// 0111001110
 //-----------------------------------------------------------------------------
 
 
@@ -104,8 +104,8 @@ void output( const std::string&, const char* fname = nullptr );
  */
 struct Node
 {
-	std::shared_ptr<Node> left { };
-	std::shared_ptr<Node> right { };
+	std::unique_ptr<Node> left { };
+	std::unique_ptr<Node> right { };
 
 	char val;
 	int freq;
@@ -115,7 +115,7 @@ struct Node
 	Node( ) = default;
 };
 
-using uNodeptr = std::shared_ptr<Node>;
+using uNodeptr = std::unique_ptr<Node>;
 
 struct uNodeptr_greater
 {
@@ -164,7 +164,7 @@ prioque frequentify( const std::string& text )
 
 	for ( auto& nd : freqs )
 		// push it to prioque
-		pq.push( std::make_shared<Node>( nd.first, nd.second ) );
+		pq.push( std::make_unique<Node>( nd.first, nd.second ) );
 
 	return pq;
 }
@@ -175,27 +175,24 @@ Huffman_build_encoding( prioque pq )
 // get priority_queue of char-frequencie
 // return table of char-encoding
 {
-	uNodeptr prev;
+	uNodeptr root;
 	while ( true )
 	{
-		uNodeptr root = std::make_shared<Node>();
-		prev = root;
-		// save tree root for future
-		auto left  = pq.top(); pq.pop();
-		auto right = pq.top(); pq.pop();
-		// get two minimal elements of a prioque
+		root = std::make_unique<Node>();
 
-		root->left = left;
-		root->right = right;
-		root->freq = left->freq + right->freq;
+		// get two minimal elements of a prioque
+		root->left  = std::move( const_cast<uNodeptr&>( pq.top() ) ) ; pq.pop();
+		root->right = std::move( const_cast<uNodeptr&>( pq.top() ) ) ; pq.pop();
+
+		root->freq = root->left->freq + root->right->freq;
 
 		if( pq.empty() ) break;
 
-		pq.push( root );
+		pq.push( std::move( root ) );
 	}
 
 	std::map<char, std::string> table;
-	Huffman_table_from_tree( prev, table, "" );
+	Huffman_table_from_tree( root, table, "" );
 
 	return table;
 }
