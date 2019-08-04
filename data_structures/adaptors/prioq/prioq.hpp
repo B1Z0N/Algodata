@@ -20,8 +20,13 @@ class Prioq {
     using reference = typename container_type::reference;
     using const_reference = typename container_type::const_reference;
 
-  	Prioq( const std::initializer_list<value_type>& lst )
-  	: _arr{ lst } { build_max_heap_to_right( _arr ); }
+  	Prioq( const std::initializer_list<value_type>& lst, 
+           const Comparator& comp_less = std::less<T> {} )
+  	: _arr{ lst }, _comp_less{ comp_less } { build_max_heap_to_right( _arr, _comp_less ); }
+    Prioq( const container_type& lst, 
+           const Comparator& comp_less = std::less<T> {} )
+    : _arr{ lst }, _comp_less{ comp_less } { build_max_heap_to_right( _arr, _comp_less ); }
+
   	Prioq( ) = default;
   	Prioq( const Prioq& ) = default; 
   	Prioq( Prioq&& ) = default; 
@@ -43,6 +48,7 @@ class Prioq {
 
   private:
     std::vector<value_type> _arr;
+    Comparator _comp_less;
 };
 
 };  // alda

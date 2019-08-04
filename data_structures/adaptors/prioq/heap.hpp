@@ -4,18 +4,21 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
+#include <functional>
 
 namespace alda {
 
-template <typename T>
-void max_heapify_to_right( std::vector<T>& arr, std::size_t index ) {
+template <typename T, typename Comparator = std::less<T>>
+void max_heapify_to_right( std::vector<T>& arr, 
+						   std::size_t index, 
+						   Comparator comp_less = std::less<T>() ) {
 	int left  = arr.size() - ( 2 * (arr.size() - index - 1) + 1 ) - 1;
 	int right = arr.size() - ( 2 * (arr.size() - index - 1) + 2 ) - 1;
 	std::size_t largest = index;
 
-	if ( left >= 0 && arr[largest] < arr[left] )
+	if ( left >= 0 && comp_less( arr[largest], arr[left] ) )
 		largest = left;
-	if ( right >= 0 && arr[largest] < arr[right] )
+	if ( right >= 0 && comp_less( arr[largest], arr[right] ) )
 		largest = right;
 
 	if ( largest != index ) {
@@ -24,10 +27,10 @@ void max_heapify_to_right( std::vector<T>& arr, std::size_t index ) {
 	}
 }
 
-template <typename T>
-void build_max_heap_to_right( std::vector<T>& arr ) {
+template <typename T, typename Comparator = std::less<T>>
+void build_max_heap_to_right( std::vector<T>& arr, Comparator comp_less = std::less<T>() ) {
 	for ( int i = arr.size() / 2; i < arr.size(); ++i ) {
-		max_heapify_to_right( arr, i );
+		max_heapify_to_right( arr, i, comp_less );
 	}
 }
 
