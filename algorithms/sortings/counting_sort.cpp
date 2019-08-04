@@ -5,12 +5,17 @@
 // commons library
 #include "container_printer/container_printer.hpp" 
 
-void counting_sort( std::vector<int>& arr, std::size_t coverage) {
-	std::vector<int> temp ( coverage, 0 );
-	std::vector<int> sorted;
+/**
+ * Sorts integral type vector, only nonnegative values accepted.
+ * elements_in_range >= min - max + 1
+ */
+template <typename IntegralType>
+void counting_sort( std::vector<IntegralType>& arr, std::size_t elements_in_range ) {
+	std::vector<IntegralType> temp ( elements_in_range + 1, IntegralType {} );
+	std::vector<IntegralType> sorted;
 
 	for ( std::size_t i = 0; i < arr.size(); ++i ) {
-		temp[arr[i] - 1] = i + 1;
+		temp[arr[i]] = i + 1;
 	}
 
 	for ( const auto& x : temp ) {
@@ -19,7 +24,23 @@ void counting_sort( std::vector<int>& arr, std::size_t coverage) {
 		}
 	}
 
-	arr = sorted;
+	arr = std::move( sorted );
+}
+
+template <typename IntegralType>
+void counting_sort_with_negatives( std::vector<IntegralType>& arr, IntegralType min, IntegralType max ) {
+	bool neg = min < 0;
+	static auto array_addition {
+		[] ( std::vector<IntegralType>& arr, IntegralType add ) {
+			for ( auto& x : arr ) {
+				x += add;
+			}
+		}
+	};
+	
+	if ( neg ) array_addition( arr, -min );
+	counting_sort( arr, max - min + 1 );
+	if ( neg ) array_addition( arr,  min );
 }
 
 int main() {
@@ -36,6 +57,6 @@ int main() {
 	int maxelem = *std::max_element( std::begin( arr ), std::end( arr ) );
 
 	cmns::print_container( std::cout, arr );
-	counting_sort( arr, minelem, maxelem );
+	counting_sort_with_negatives( arr, minelem, maxelem );
 	cmns::print_container( std::cout, arr );
 }
