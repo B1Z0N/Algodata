@@ -15,9 +15,9 @@ void max_heapify( std::vector<T>& arr, std::size_t length, std::size_t index ) {
 	std::size_t right = 2 * index + 2;
 	std::size_t largest = index;
 
-	if ( left < length && comp( arr[largest], arr[left] ) )
+	if ( left < length && comp( arr[left], arr[largest] ) )
 		largest = left;
-	if ( right < length && comp( arr[largest], arr[right] ) )
+	if ( right < length && comp( arr[right], arr[largest] ) )
 		largest = right;
 
 	if ( largest != index ) {
