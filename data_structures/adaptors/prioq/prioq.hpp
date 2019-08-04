@@ -20,12 +20,10 @@ class Prioq {
     using reference = typename container_type::reference;
     using const_reference = typename container_type::const_reference;
 
-  	Prioq( const std::initializer_list<value_type>& lst, 
-           const Comparator& comp_less = std::less<T> {} )
-  	: _arr{ lst }, _comp_less{ comp_less } { build_max_heap_to_right( _arr, _comp_less ); }
-    Prioq( const container_type& lst, 
-           const Comparator& comp_less = std::less<T> {} )
-    : _arr{ lst }, _comp_less{ comp_less } { build_max_heap_to_right( _arr, _comp_less ); }
+  	Prioq( const std::initializer_list<value_type>& lst )
+  	: _arr{ lst } { build_max_heap<T, Comparator>( _arr ); }
+    Prioq( const container_type& arr )
+    : _arr{ arr } { build_max_heap<T, Comparator>( _arr ); }
 
   	Prioq( ) = default;
   	Prioq( const Prioq& ) = default; 
@@ -33,14 +31,16 @@ class Prioq {
   	Prioq& operator=( const Prioq& ) = default; 
   	Prioq& operator=( Prioq&& ) = default; 
 
-    const_reference top( ) const { return _arr.back(); };
+    const_reference top( ) const { return _arr.front(); };
     void push( const_reference elem ) {
         _arr.push_back( elem );
-        max_heapify_to_right( _arr, _arr.size() - 1 );
+        push_heap<T, Comparator>( _arr );
     }
     void pop( ) {
+        // for ( const auto& x : _arr ) std::cout << x << " ";
+        // std::cout << '\n';
+        pop_heap<T, Comparator>( _arr );
         _arr.pop_back();
-        max_heapify_to_right( _arr, _arr.size() - 1 );
     }
 
     bool empty( ) const { return _arr.empty(); };
@@ -48,7 +48,6 @@ class Prioq {
 
   private:
     std::vector<value_type> _arr;
-    Comparator _comp_less;
 };
 
 };  // alda

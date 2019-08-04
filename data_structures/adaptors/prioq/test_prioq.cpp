@@ -3,9 +3,10 @@
 #include <iostream>
 #include <vector>
 #include <queue>
+#include <functional>
 
 int main( ) {
-	alda::Prioq<int> pq { 4, 3, 2, -50, 50, -39 };
+	alda::Prioq<int, std::greater<int>> pq { 100, -1, 2, -3, 4, -5, 6, -7, 8, -20};
 
 	while ( !pq.empty() ) {
 		std::cout << pq.top() << " ";

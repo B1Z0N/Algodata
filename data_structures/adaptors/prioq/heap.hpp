@@ -9,29 +9,40 @@
 namespace alda {
 
 template <typename T, typename Comparator = std::less<T>>
-void max_heapify_to_right( std::vector<T>& arr, 
-						   std::size_t index, 
-						   Comparator comp_less = std::less<T>() ) {
-	int left  = arr.size() - ( 2 * (arr.size() - index - 1) + 1 ) - 1;
-	int right = arr.size() - ( 2 * (arr.size() - index - 1) + 2 ) - 1;
+void max_heapify( std::vector<T>& arr, std::size_t length, std::size_t index ) {
+	static Comparator comp {};
+	std::size_t left  = 2 * index + 1;
+	std::size_t right = 2 * index + 2;
 	std::size_t largest = index;
 
-	if ( left >= 0 && comp_less( arr[largest], arr[left] ) )
+	if ( left < length && comp( arr[largest], arr[left] ) )
 		largest = left;
-	if ( right >= 0 && comp_less( arr[largest], arr[right] ) )
+	if ( right < length && comp( arr[largest], arr[right] ) )
 		largest = right;
 
 	if ( largest != index ) {
 		std::swap( arr[index], arr[largest] );
-		max_heapify_to_right( arr, largest );
+		max_heapify<T, Comparator>( arr, length, largest );
 	}
 }
 
 template <typename T, typename Comparator = std::less<T>>
-void build_max_heap_to_right( std::vector<T>& arr, Comparator comp_less = std::less<T>() ) {
-	for ( int i = arr.size() / 2; i < arr.size(); ++i ) {
-		max_heapify_to_right( arr, i, comp_less );
+void build_max_heap( std::vector<T>& arr ) {
+	for ( int i = arr.size() / 2 - 1; i >= 0; --i ) {
+		max_heapify<T, Comparator>( arr, arr.size(), i );
 	}
+}
+
+template <typename T, typename Comparator = std::less<T>>
+void pop_heap( std::vector<T>& arr ) {
+	std::swap( arr.front(), arr.back() );
+	max_heapify<T, Comparator>( arr, arr.size() - 1, 0 );
+}
+
+template <typename T, typename Comparator = std::less<T>>
+void push_heap( std::vector<T>& arr ) {
+	std::swap( arr.front(), arr.back() );
+	max_heapify<T, Comparator>( arr, arr.size(), 0 );
 }
 
 };	// alda
