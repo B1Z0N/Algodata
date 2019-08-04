@@ -10,17 +10,22 @@
  * elements_in_range >= min - max + 1
  */
 template <typename IntegralType>
-void counting_sort( std::vector<IntegralType>& arr, std::size_t elements_in_range ) {
+void counting_sort_from_zero( std::vector<IntegralType>& arr, std::size_t elements_in_range ) {
 	std::vector<IntegralType> temp ( elements_in_range + 1, IntegralType {} );
 	std::vector<IntegralType> sorted;
 
 	for ( std::size_t i = 0; i < arr.size(); ++i ) {
-		temp[arr[i]] = i + 1;
+		temp[arr[i]] += 1;
 	}
 
-	for ( const auto& x : temp ) {
-		if ( x != 0 ) {
-			sorted.push_back( arr[x - 1] );
+	// for ( std::size_t i = 1; i < temp.size(); ++i ) {
+	// 	temp[i] = temp[i - 1] + temp[i];
+	// }
+
+	for ( std::size_t i = 0; i < temp.size(); ++i ) {
+		while ( temp[i] ) {
+			sorted.push_back( i ); 
+			--temp[i];
 		}
 	}
 
@@ -28,8 +33,8 @@ void counting_sort( std::vector<IntegralType>& arr, std::size_t elements_in_rang
 }
 
 template <typename IntegralType>
-void counting_sort_with_negatives( std::vector<IntegralType>& arr, IntegralType min, IntegralType max ) {
-	bool neg = min < 0;
+void counting_sort( std::vector<IntegralType>& arr, IntegralType min, IntegralType max ) {
+	// bool neg = min < 0;
 	static auto array_addition {
 		[] ( std::vector<IntegralType>& arr, IntegralType add ) {
 			for ( auto& x : arr ) {
@@ -38,9 +43,9 @@ void counting_sort_with_negatives( std::vector<IntegralType>& arr, IntegralType 
 		}
 	};
 	
-	if ( neg ) array_addition( arr, -min );
-	counting_sort( arr, max - min + 1 );
-	if ( neg ) array_addition( arr,  min );
+	array_addition( arr, -min );
+	counting_sort_from_zero( arr, max - min + 1 );
+	array_addition( arr, min );
 }
 
 int main() {
@@ -57,6 +62,6 @@ int main() {
 	int maxelem = *std::max_element( std::begin( arr ), std::end( arr ) );
 
 	cmns::print_container( std::cout, arr );
-	counting_sort_with_negatives( arr, minelem, maxelem );
+	counting_sort( arr, minelem, maxelem );
 	cmns::print_container( std::cout, arr );
 }
