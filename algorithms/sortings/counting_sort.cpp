@@ -11,7 +11,7 @@
  */
 template <typename IntegralType>
 void counting_sort_from_zero( std::vector<IntegralType>& arr, std::size_t elements_in_range ) {
-	std::vector<IntegralType> temp   ( elements_in_range + 1, IntegralType {} );
+	std::vector<IntegralType> temp   ( elements_in_range, IntegralType {} );
 	std::vector<IntegralType> sorted ( arr.size() );
 
 	for ( std::size_t i = 0; i < arr.size(); ++i ) {
