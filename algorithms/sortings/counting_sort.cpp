@@ -11,22 +11,20 @@
  */
 template <typename IntegralType>
 void counting_sort_from_zero( std::vector<IntegralType>& arr, std::size_t elements_in_range ) {
-	std::vector<IntegralType> temp ( elements_in_range + 1, IntegralType {} );
-	std::vector<IntegralType> sorted;
+	std::vector<IntegralType> temp   ( elements_in_range + 1, IntegralType {} );
+	std::vector<IntegralType> sorted ( arr.size() );
 
 	for ( std::size_t i = 0; i < arr.size(); ++i ) {
 		temp[arr[i]] += 1;
 	}
 
-	// for ( std::size_t i = 1; i < temp.size(); ++i ) {
-	// 	temp[i] = temp[i - 1] + temp[i];
-	// }
+	for ( std::size_t i = 1; i < temp.size(); ++i ) {
+		temp[i] = temp[i - 1] + temp[i];
+	}
 
-	for ( std::size_t i = 0; i < temp.size(); ++i ) {
-		while ( temp[i] ) {
-			sorted.push_back( i ); 
-			--temp[i];
-		}
+	for ( std::size_t i = 0; i < arr.size(); ++i ) {
+		sorted[temp[arr[i]]] = arr[i];
+		--temp[arr[i]];
 	}
 
 	arr = std::move( sorted );
