@@ -42,7 +42,6 @@ void radix_sort( std::vector<IntegralType>& arr, std::size_t max_digit_num ) {
 	static auto get_digit {
 		[] ( std::size_t i ) {
 			return [i] ( IntegralType num ) {
-
 				IntegralType current_radix = pow( kSystemBase,   i  );
 				IntegralType res = 
 					(( num % (current_radix * kSystemBase) ) - 
@@ -58,6 +57,28 @@ void radix_sort( std::vector<IntegralType>& arr, std::size_t max_digit_num ) {
 	}
 }
 
+template <typename IntegralType>
+void radix_sort( std::vector<IntegralType>& arr ) {
+	std::size_t max_digit_num { };
+	std::for_each( std::begin( arr ), std::end( arr ),
+		// find number of digits 
+		[&max_digit_num] ( IntegralType& num ) {
+			std::size_t next_digit_num { 1 };
+			// finding order of this num
+			while ( num /
+					static_cast<int>( 
+						pow( kSystemBase, next_digit_num ) 
+					) 
+				  ) ++next_digit_num;
+
+			if ( next_digit_num > max_digit_num ) 
+				max_digit_num = next_digit_num;
+		}
+	);
+
+	radix_sort( arr, max_digit_num );
+}
+
 
 int main() {
 	int in, num;
@@ -69,10 +90,7 @@ int main() {
 		arr.push_back( in );
 	}
 
-	int minelem = *std::min_element( std::begin( arr ), std::end( arr ) );
-	int maxelem = *std::max_element( std::begin( arr ), std::end( arr ) );
-
 	cmns::print_container( std::cout, arr );
-	radix_sort( arr, 7 );
+	radix_sort( arr );
 	cmns::print_container( std::cout, arr );
 }
