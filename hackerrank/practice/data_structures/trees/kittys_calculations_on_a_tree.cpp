@@ -4,7 +4,7 @@
 #include <tuple>
 #include <cmath>
 
-long long MOD_CONST = std::pow(10, 9) + 7;
+long long MOD_CONST = 1e9 + 7;
 
 std::vector<std::pair<int, int>> permutation(std::vector<int> v)
 {
