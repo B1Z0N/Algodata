@@ -50,6 +50,8 @@ segment find_segment(int L, int R)
     level_step = step(level);
     int next_start = next_segment_start(L, R, level);
     int amount = (next_start - L + 1) / level_step;
+
+    if (level == 0 && L % 10 == 0) amount = 1;
     return {level, amount};
 }
 
