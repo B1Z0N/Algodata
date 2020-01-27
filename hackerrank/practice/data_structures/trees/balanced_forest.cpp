@@ -99,45 +99,152 @@ Node constructFrom(vector<int> &&c, vector<vector<int>> &&edges)
     return root;
 }
 
-int splitIntoTwo(Node wroot /* weights root */)
+int splitToBalancedForest(int sum1, Node *root2, Node *root = nullptr)
 {
-    for (auto it = begin(wroot.children); it != end(wroot.children); ++it)
+    if (root == nullptr)
+        root = root2;
+
+    for (auto child : root2->children)
     {
-        int sum1 = *it->value;
-        Node *current = *it;
+        int sum2 = child->value;
+        int sum3 = root->value - child->value;
 
-        wroot.value -= sum1;
-        auto next = wroot.children.erase(it);
-
-        int balance = splitToBalancedForest(sum1, wroot);
-        if (balance != -1) {
-            return balance;
+        if (sum2 == sum1)
+        {
+            return abs(sum3 - sum1);
+        }
+        else if (sum3 == sum1)
+        {
+            return abs(sum2 - sum1);
         }
 
-        wroot.children.insert(next, current);
-        wroot.value += sum1; 
-    }
-
-    for (auto child : wroot.children) {
-        int balance {splitIntoTwo(*child)};
-        if (balance != -1) return balance;
+        int balance = splitToBalancedForest(sum1, child, root);
+        if (balance != -1)
+            return balance;
     }
 
     return -1;
 }
 
-int splitToBalancedForest(int sum1, Node root2)
+int splitIntoTwo(Node *wroot /* weights root */)
 {
-    return 0;
+    for (auto it = begin(wroot->children); it != end(wroot->children); ++it)
+    {
+        // cut some edge leading to children node
+        Node *current = *it;
+        auto next = wroot->children.erase(it);
+        wroot->value -= current->value;
+
+        // try to find the balance with part that is left after cutting
+        int balance = splitToBalancedForest(current->value, wroot);
+
+        // restore, if there are no way of such splitting
+        wroot->children.insert(next, current);
+        wroot->value += current->value;
+
+        // finally return minimal balance found
+        if (balance != -1)
+            return balance;
+    }
+
+    // call this func on each child node
+    for (auto child : wroot->children)
+    {
+        int balance{splitIntoTwo(child)};
+        if (balance != -1)
+            return balance;
+    }
+
+    return -1;
+}
+
+// Complete the balancedForest function below.
+int balancedForest(vector<int>&& c, vector<vector<int>>&& edges)
+{
+    cout << 1 << '\n';
+    Node wroot = constructFrom(std::move(c), std::move(edges)).weightsTree();
+    return splitIntoTwo(&wroot);
 }
 
 int main()
 {
-    Node root = constructFrom(vector<int>{15, 12, 8, 14, 13}, vector<vector<int>>{{1, 2}, {1, 3}, {1, 4}, {4, 5}});
+    ofstream fout(getenv("OUTPUT_PATH"));
 
-    root.postorder();
-    cout << '\n';
-    root.weightsTree().postorder();
+    int q;
+    cin >> q;
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    for (int q_itr = 0; q_itr < q; q_itr++)
+    {
+        int n;
+        cin >> n;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+        string c_temp_temp;
+        getline(cin, c_temp_temp);
+
+        vector<string> c_temp = split_string(c_temp_temp);
+
+        vector<int> c(n);
+
+        for (int i = 0; i < n; i++)
+        {
+            int c_item = stoi(c_temp[i]);
+
+            c[i] = c_item;
+        }
+
+        vector<vector<int>> edges(n - 1);
+        for (int i = 0; i < n - 1; i++)
+        {
+            edges[i].resize(2);
+
+            for (int j = 0; j < 2; j++)
+            {
+                cin >> edges[i][j];
+            }
+
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
+
+        int result = balancedForest(std::move(c), std::move(edges));
+
+        cout << result << "\n";
+    }
+
+    fout.close();
 
     return 0;
+}
+
+vector<string> split_string(string input_string)
+{
+    string::iterator new_end = unique(input_string.begin(), input_string.end(), [](const char &x, const char &y) {
+        return x == y and x == ' ';
+    });
+
+    input_string.erase(new_end, input_string.end());
+
+    while (input_string[input_string.length() - 1] == ' ')
+    {
+        input_string.pop_back();
+    }
+
+    vector<string> splits;
+    char delimiter = ' ';
+
+    size_t i = 0;
+    size_t pos = input_string.find(delimiter);
+
+    while (pos != string::npos)
+    {
+        splits.push_back(input_string.substr(i, pos - i));
+
+        i = pos + 1;
+        pos = input_string.find(delimiter, i);
+    }
+
+    splits.push_back(input_string.substr(i, min(pos, input_string.length()) - i + 1));
+
+    return splits;
 }
