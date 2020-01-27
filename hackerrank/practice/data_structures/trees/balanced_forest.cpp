@@ -6,116 +6,69 @@ vector<string> split_string(string);
 
 class Node {
     vector<Node*> children {};
-    Node* parent {};
     int value {};
 public:
-    Node(int value, Node* parent = nullptr)
-        : value{value} parent{parent} {}
+    Node(int value)
+        : value{value} {}
     Node() = default;                                                                      
     ~Node() {
         for (auto nd : children) delete nd;
     }
 
-    void addChild(int value) {
-        children.push_back(new Node{value, this});
-    }
-
-    template <typename F>
-    void forEach(const F& fun) {
-        if(children.size() == 0) return;
-        for (auto nd : children) nd->forEach(fun);
-        fun(value);
-    }
-}
-
-Node sumsTree(Node root) {
-    Node sums_root {};
-    int sum = 0;
-    auto fun {[] (Node* node, int value) {
-        sum += value;
-        node->value = sum;  
-    }};
-    root.forEach(fun);
-}
-
-// Complete the balancedForest function below.
-int balancedForest(vector<int> c, vector<vector<int>> edges) {
-
-
-}
-
-int main()
-{
-    ofstream fout(getenv("OUTPUT_PATH"));
-
-    int q;
-    cin >> q;
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-    for (int q_itr = 0; q_itr < q; q_itr++) {
-        int n;
-        cin >> n;
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-        string c_temp_temp;
-        getline(cin, c_temp_temp);
-
-        vector<string> c_temp = split_string(c_temp_temp);
-
-        vector<int> c(n);
-
-        for (int i = 0; i < n; i++) {
-            int c_item = stoi(c_temp[i]);
-
-            c[i] = c_item;
+    void postorder() const {
+        for (auto child : children) {
+            child->postorder();
         }
+        cout << value << ' ';
+    }
 
-        vector<vector<int>> edges(n - 1);
-        for (int i = 0; i < n - 1; i++) {
-            edges[i].resize(2);
+    void setValue(int val) {
+        value = val;
+    }
 
-            for (int j = 0; j < 2; j++) {
-                cin >> edges[i][j];
+    Node* addChild(int value) {
+        Node* child = new Node{value};
+        children.push_back(child);
+        return child;
+    }
+
+    Node* addChild(Node* child) {
+        children.push_back(child);
+        return child;
+    }
+
+    unique_ptr<Node> weightsTree() const {
+        return unique_ptr<Node>{_weightsTree(this)};
+    }
+
+    friend Node* _weightsTree(const Node* root) {
+        if (root->children.size() == 0) return new Node{root->value};
+
+        Node* weight_node = new Node{};
+        int weight = root->value;
+    
+        for (auto child : root->children) {
+            Node* child_sum =  _weightsTree(child);
+            if (child_sum) {
+                weight_node->addChild(child_sum);
+                weight += child_sum->value;
             }
-
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
         }
-
-        int result = balancedForest(c, edges);
-
-        fout << result << "\n";
+        
+        weight_node->value = weight;
+        return weight_node;
     }
+};
 
-    fout.close();
+int main() {
+    Node root {15};
+    root.addChild(12);
+    root.addChild(8);
+    root.addChild(14)->addChild(13);
+
+    root.postorder();
+    cout << '\n';
+    root.weightsTree()->postorder();
 
     return 0;
-}
-
-vector<string> split_string(string input_string) {
-    string::iterator new_end = unique(input_string.begin(), input_string.end(), [] (const char &x, const char &y) {
-        return x == y and x == ' ';
-    });
-
-    input_string.erase(new_end, input_string.end());
-
-    while (input_string[input_string.length() - 1] == ' ') {
-        input_string.pop_back();
-    }
-
-    vector<string> splits;
-    char delimiter = ' ';
-
-    size_t i = 0;
-    size_t pos = input_string.find(delimiter);
-
-    while (pos != string::npos) {
-        splits.push_back(input_string.substr(i, pos - i));
-
-        i = pos + 1;
-        pos = input_string.find(delimiter, i);
-    }
-
-    splits.push_back(input_string.substr(i, min(pos, input_string.length()) - i + 1));
-
-    return splits;
 }
