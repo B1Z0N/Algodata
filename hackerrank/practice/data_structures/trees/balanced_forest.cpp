@@ -5,19 +5,23 @@ using namespace std;
 vector<string> split_string(string);
 
 class Forest;
+class WeightForest;
 
 template <typename ChildT>
 class GeneralForest
 {
+    ChildT *subthis;
+
 protected:
     list<ChildT *> children{};
     ChildT *parent{};
     int value{};
 
 public:
-    GeneralForest(int value, ChildT *parent = nullptr, list<ChildT *> children = list<ChildT *>{})
-        : value{value}, children{children}, parent{parent} {}
-    GeneralForest() = default;
+    GeneralForest(ChildT *subthis, int value, ChildT *parent = nullptr, list<ChildT *> children = list<ChildT *>{})
+        : value{value}, children{children}, parent{parent}, subthis{subthis} {}
+    GeneralForest(ChildT *subthis) : subthis{subthis} {}
+    GeneralForest() = delete;
     ~GeneralForest()
     {
         for (auto child : children)
@@ -51,13 +55,13 @@ public:
     void addChild(int value)
     {
         children.push_back(new ChildT{value});
-        children.back()->parent = this;
+        children.back()->parent = subthis;
     }
 
     void addChild(ChildT *child)
     {
         children.push_back(child);
-        child->parent = this;
+        child->parent = subthis;
     }
 
     static ChildT constructFrom(vector<int> c, vector<vector<int>> edges)
@@ -90,72 +94,76 @@ class Forest : public GeneralForest<Forest>
 {
 public:
     Forest(int value, Forest *parent = nullptr, list<Forest *> children = list<Forest *>{})
-        : GeneralForest{value, parent, children} {}
-    Forest() : GeneralForest{} {}
+        : GeneralForest{this, value, parent, children} {}
+    Forest() : GeneralForest{this} {}
+    friend class WeightForest;
 };
 
-// class WeightForest : public GeneralForest<WeightForest>
-// {
-// public:
-//     WeightForest(const Forest *root)
-//     {
-//         const WeightForest* wroot = ightForest>(root);
-//         wroot = _weightsTree(wroot);
-//         this->value = wroot->value;
-//         this->children = wroot->children;
-//         this->parent = wroot->parent;
-//     }
+class WeightForest : public GeneralForest<WeightForest>
+{
+public:
+    WeightForest(int value, WeightForest *parent = nullptr, list<WeightForest *> children = list<WeightForest *>{})
+        : GeneralForest{this, value, parent, children} {}
+    WeightForest() : GeneralForest{this} {}
 
-//     // friend pair<unique_ptr<Forest>, list<Forest *>::iterator> cutWeightNode(Forest *parent, list<Forest *>::iterator child_it)
-//     // {
-//     //     Forest *current = *child_it;
-//     //     int cut_weight = current->value;
-//     //     while (current->parent != nullptr)
-//     //     {
-//     //         current = current->parent;
-//     //         current->value -= cut_weight;
-//     //     }
-//     //     current = *child_it;
-//     //     auto next = parent->children.erase(child_it);
+    // friend pair<unique_ptr<Forest>, list<Forest *>::iterator> cutWeightNode(Forest *parent, list<Forest *>::iterator child_it)
+    // {
+    //     Forest *current = *child_it;
+    //     int cut_weight = current->value;
+    //     while (current->parent != nullptr)
+    //     {
+    //         current = current->parent;
+    //         current->value -= cut_weight;
+    //     }
+    //     current = *child_it;
+    //     auto next = parent->children.erase(child_it);
 
-//     //     return {unique_ptr<Forest>{current}, next};
-//     // }
+    //     return {unique_ptr<Forest>{current}, next};
+    // }
 
-//     // friend void insertWeightNode(list<Forest *>::iterator child_it, list<Forest *>::iterator after_child_it)
-//     // {
-//     //     Forest *current = *child_it;
-//     //     Forest *parent = *affter_child_it->parent;
-//     //     parent->children.insert(after_child_it, child_it);
-//     //     int insert_weight = current->value;
-//     //     while (parent != nullptr)
-//     //     {
-//     //         parent->value += insert_weight;
-//     //         parent = parent->parent;
-//     //     }
-//     // }
+    // friend void insertWeightNode(list<Forest *>::iterator child_it, list<Forest *>::iterator after_child_it)
+    // {
+    //     Forest *current = *child_it;
+    //     Forest *parent = *affter_child_it->parent;
+    //     parent->children.insert(after_child_it, child_it);
+    //     int insert_weight = current->value;
+    //     while (parent != nullptr)
+    //     {
+    //         parent->value += insert_weight;
+    //         parent = parent->parent;
+    //     }
+    // }
 
-// private:
-//     static WeightForest *_weightsTree(const WeightForest *root, WeightForest *parent = nullptr)
-//     {
-//         WeightForest *weight_node = new WeightForest{root->value, parent};
-//         for (auto child : root->children)
-//         {
-//             WeightForest *child_sum = _weightsTree(child, weight_node);
-//             weight_node->addChild(child_sum);
-//             weight_node->value += child_sum->value;
-//         }
+    static WeightForest from(const Forest *root)
+    {
+        WeightForest this_node {root->value, nullptr};
+        _weightsTree(root, nullptr, &this_node);
+        return this_node;
+    }
 
-//         return weight_node;
-//     }
-// };
+private:
+    static WeightForest* _weightsTree(const Forest *root, WeightForest *parent = nullptr, WeightForest *this_node = nullptr)
+    {
+        // just a workaround to pass in stack-acllocated this_node
+        WeightForest *weight_node = this_node == nullptr ? new WeightForest{root->value, parent} : this_node;
+        for (auto child : root->children)
+        {
+            WeightForest *child_sum = _weightsTree(child, weight_node);
+            weight_node->addChild(child_sum);
+            weight_node->value += child_sum->value;
+        }
+
+        return weight_node;
+    }
+};
 
 int main()
 {
     Forest root = Forest::constructFrom(vector<int>{15, 12, 8, 14, 13}, vector<vector<int>>{{1, 2}, {1, 3}, {1, 4}, {4, 5}});
-    // WeightForest wroot{&root};
+    WeightForest wroot = WeightForest::from(&root);
     root.postorder();
     cout << '\n';
-    // wroot.postorder();
+    wroot.postorder();
     cout << '\n';
 
     return 0;
