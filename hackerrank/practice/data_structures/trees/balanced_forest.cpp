@@ -5,21 +5,20 @@ using namespace std;
 vector<string> split_string(string);
 
 class Forest;
-class WeightForest;
 
-
-class Forest
+template <typename ChildT>
+class GeneralForest
 {
 protected:
-    list<Forest *> children{};
-    Forest *parent{};
+    list<ChildT *> children{};
+    ChildT *parent{};
     int value{};
 
 public:
-    Forest(int value, Forest *parent = nullptr, list<Forest *> children = list<Forest *>{})
+    GeneralForest(int value, ChildT *parent = nullptr, list<ChildT *> children = list<ChildT *>{})
         : value{value}, children{children}, parent{parent} {}
-    Forest() = default;
-    ~Forest()
+    GeneralForest() = default;
+    ~GeneralForest()
     {
         for (auto child : children)
             delete child;
@@ -51,19 +50,19 @@ public:
 
     void addChild(int value)
     {
-        children.push_back(new Forest{value});
+        children.push_back(new ChildT{value});
         children.back()->parent = this;
     }
 
-    void addChild(Forest *child)
+    void addChild(ChildT *child)
     {
         children.push_back(child);
         child->parent = this;
     }
 
-    static Forest constructFrom(vector<int> c, vector<vector<int>> edges)
+    static ChildT constructFrom(vector<int> c, vector<vector<int>> edges)
     {
-        Forest root{};
+        ChildT root{};
         // adding dummy 0-value node to root,
         // so that we had at least 3 nodes in the tree
         c.push_back(0);
@@ -73,7 +72,7 @@ public:
     }
 
 private:
-    friend void _constructFrom(const vector<int> &c, const vector<vector<int>> &edges, Forest *root, Forest *parent = nullptr, int i = 1)
+    friend void _constructFrom(const vector<int> &c, const vector<vector<int>> &edges, ChildT *root, ChildT *parent = nullptr, int i = 1)
     {
         root->value = c[i - 1];
         root->parent = parent;
@@ -87,71 +86,76 @@ private:
     }
 };
 
-class WeightForest : public Forest
+class Forest : public GeneralForest<Forest>
 {
 public:
-    WeightForest(const Forest *root)
-    {
-        const WeightForest* wroot = static_cast<const WeightForest*>(root);
-        wroot = _weightsTree(wroot);
-        this->value = wroot->value;
-        this->children = wroot->children;
-        this->parent = wroot->parent;
-    }
-
-    WeightForest(int value, Forest *parent = nullptr, list<Forest *> children = list<Forest *>{})
-        : Forest(value, parent, children) {}
-
-    // friend pair<unique_ptr<Forest>, list<Forest *>::iterator> cutWeightNode(Forest *parent, list<Forest *>::iterator child_it)
-    // {
-    //     Forest *current = *child_it;
-    //     int cut_weight = current->value;
-    //     while (current->parent != nullptr)
-    //     {
-    //         current = current->parent;
-    //         current->value -= cut_weight;
-    //     }
-    //     current = *child_it;
-    //     auto next = parent->children.erase(child_it);
-
-    //     return {unique_ptr<Forest>{current}, next};
-    // }
-
-    // friend void insertWeightNode(list<Forest *>::iterator child_it, list<Forest *>::iterator after_child_it)
-    // {
-    //     Forest *current = *child_it;
-    //     Forest *parent = *affter_child_it->parent;
-    //     parent->children.insert(after_child_it, child_it);
-    //     int insert_weight = current->value;
-    //     while (parent != nullptr)
-    //     {
-    //         parent->value += insert_weight;
-    //         parent = parent->parent;
-    //     }
-    // }
-
-private:
-    static WeightForest *_weightsTree(const WeightForest *root, WeightForest *parent = nullptr)
-    {
-        WeightForest *weight_node = new WeightForest{root->value, static_cast<Forest*>(parent)};
-        for (auto child : root->children)
-        {
-            WeightForest *child_sum = _weightsTree(static_cast<WeightForest*>(child), weight_node);
-            weight_node->addChild(child_sum);
-            weight_node->value += child_sum->value;
-        }
-
-        return weight_node;
-    }
+    Forest(int value, Forest *parent = nullptr, list<Forest *> children = list<Forest *>{})
+        : GeneralForest{value, parent, children} {}
+    Forest() : GeneralForest{} {}
 };
+
+// class WeightForest : public GeneralForest<WeightForest>
+// {
+// public:
+//     WeightForest(const Forest *root)
+//     {
+//         const WeightForest* wroot = ightForest>(root);
+//         wroot = _weightsTree(wroot);
+//         this->value = wroot->value;
+//         this->children = wroot->children;
+//         this->parent = wroot->parent;
+//     }
+
+//     // friend pair<unique_ptr<Forest>, list<Forest *>::iterator> cutWeightNode(Forest *parent, list<Forest *>::iterator child_it)
+//     // {
+//     //     Forest *current = *child_it;
+//     //     int cut_weight = current->value;
+//     //     while (current->parent != nullptr)
+//     //     {
+//     //         current = current->parent;
+//     //         current->value -= cut_weight;
+//     //     }
+//     //     current = *child_it;
+//     //     auto next = parent->children.erase(child_it);
+
+//     //     return {unique_ptr<Forest>{current}, next};
+//     // }
+
+//     // friend void insertWeightNode(list<Forest *>::iterator child_it, list<Forest *>::iterator after_child_it)
+//     // {
+//     //     Forest *current = *child_it;
+//     //     Forest *parent = *affter_child_it->parent;
+//     //     parent->children.insert(after_child_it, child_it);
+//     //     int insert_weight = current->value;
+//     //     while (parent != nullptr)
+//     //     {
+//     //         parent->value += insert_weight;
+//     //         parent = parent->parent;
+//     //     }
+//     // }
+
+// private:
+//     static WeightForest *_weightsTree(const WeightForest *root, WeightForest *parent = nullptr)
+//     {
+//         WeightForest *weight_node = new WeightForest{root->value, parent};
+//         for (auto child : root->children)
+//         {
+//             WeightForest *child_sum = _weightsTree(child, weight_node);
+//             weight_node->addChild(child_sum);
+//             weight_node->value += child_sum->value;
+//         }
+
+//         return weight_node;
+//     }
+// };
 
 int main()
 {
     Forest root = Forest::constructFrom(vector<int>{15, 12, 8, 14, 13}, vector<vector<int>>{{1, 2}, {1, 3}, {1, 4}, {4, 5}});
-    WeightForest wroot{&root};
+    // WeightForest wroot{&root};
     root.postorder();
     cout << '\n';
-    wroot.postorder();
+    // wroot.postorder();
     cout << '\n';
 
     return 0;
