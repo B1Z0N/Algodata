@@ -4,8 +4,13 @@ using namespace std;
 
 vector<string> split_string(string);
 
+class Forest;
+class WeightForest;
+
+
 class Forest
 {
+protected:
     list<Forest *> children{};
     Forest *parent{};
     int value{};
@@ -56,11 +61,6 @@ public:
         child->parent = this;
     }
 
-    unique_ptr<Forest> weightsTree() const
-    {
-        return unique_ptr<Forest>{_weightsTree(this)};
-    }
-
     static Forest constructFrom(vector<int> c, vector<vector<int>> edges)
     {
         Forest root{};
@@ -70,34 +70,6 @@ public:
         edges.push_back(vector<int>{1, c.size()});
         _constructFrom(c, edges, &root);
         return root;
-    }
-
-    friend pair<unique_ptr<Forest>, list<Forest *>::iterator> cutWeightNode(Forest *parent, list<Forest *>::iterator child_it)
-    {
-        Forest *current = *child_it;
-        int cut_weight = current->value;
-        while (current->parent != nullptr)
-        {
-            current = current->parent;
-            current->value -= cut_weight;
-        }
-        current = *child_it;
-        auto next = parent->children.erase(child_it);
-
-        return {unique_ptr<Forest>{current}, next};
-    }
-
-    friend void insertWeightNode(list<Forest *>::iterator child_it, list<Forest *>::iterator after_child_it)
-    {
-        Forest *current = *child_it;
-        Forest *parent = *affter_child_it->parent;
-        parent->children.insert(after_child_it, child_it);
-        int insert_weight = current->value;
-        while (parent != nullptr)
-        {
-            parent->value += insert_weight;
-            parent = parent->parent;
-        }
     }
 
 private:
@@ -113,13 +85,58 @@ private:
                 _constructFrom(c, edges, root->children.back(), root, edge[1]);
             }
     }
+};
 
-    friend Forest *_weightsTree(const Forest *root, Forest *parent = nullptr)
+class WeightForest : public Forest
+{
+public:
+    WeightForest(const Forest *root)
     {
-        Forest *weight_node = new Forest{root->value, parent};
+        const WeightForest* wroot = static_cast<const WeightForest*>(root);
+        wroot = _weightsTree(wroot);
+        this->value = wroot->value;
+        this->children = wroot->children;
+        this->parent = wroot->parent;
+    }
+
+    WeightForest(int value, Forest *parent = nullptr, list<Forest *> children = list<Forest *>{})
+        : Forest(value, parent, children) {}
+
+    // friend pair<unique_ptr<Forest>, list<Forest *>::iterator> cutWeightNode(Forest *parent, list<Forest *>::iterator child_it)
+    // {
+    //     Forest *current = *child_it;
+    //     int cut_weight = current->value;
+    //     while (current->parent != nullptr)
+    //     {
+    //         current = current->parent;
+    //         current->value -= cut_weight;
+    //     }
+    //     current = *child_it;
+    //     auto next = parent->children.erase(child_it);
+
+    //     return {unique_ptr<Forest>{current}, next};
+    // }
+
+    // friend void insertWeightNode(list<Forest *>::iterator child_it, list<Forest *>::iterator after_child_it)
+    // {
+    //     Forest *current = *child_it;
+    //     Forest *parent = *affter_child_it->parent;
+    //     parent->children.insert(after_child_it, child_it);
+    //     int insert_weight = current->value;
+    //     while (parent != nullptr)
+    //     {
+    //         parent->value += insert_weight;
+    //         parent = parent->parent;
+    //     }
+    // }
+
+private:
+    static WeightForest *_weightsTree(const WeightForest *root, WeightForest *parent = nullptr)
+    {
+        WeightForest *weight_node = new WeightForest{root->value, static_cast<Forest*>(parent)};
         for (auto child : root->children)
         {
-            Forest *child_sum = _weightsTree(child, weight_node);
+            WeightForest *child_sum = _weightsTree(static_cast<WeightForest*>(child), weight_node);
             weight_node->addChild(child_sum);
             weight_node->value += child_sum->value;
         }
@@ -131,10 +148,10 @@ private:
 int main()
 {
     Forest root = Forest::constructFrom(vector<int>{15, 12, 8, 14, 13}, vector<vector<int>>{{1, 2}, {1, 3}, {1, 4}, {4, 5}});
-    auto wroot = root.weightsTree();
+    WeightForest wroot{&root};
     root.postorder();
     cout << '\n';
-    wroot->postorder();
+    wroot.postorder();
     cout << '\n';
 
     return 0;
