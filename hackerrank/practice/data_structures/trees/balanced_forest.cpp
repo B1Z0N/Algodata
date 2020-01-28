@@ -4,12 +4,15 @@ using namespace std;
 
 vector<string> split_string(string);
 
+
 class Forest;
 class WeightForest;
+
 
 template <typename ChildT>
 class GeneralForest
 {
+    // 'this' pointer of subclass  
     ChildT *subthis;
 
 protected:
@@ -63,32 +66,8 @@ public:
         children.push_back(child);
         child->parent = subthis;
     }
-
-    static ChildT constructFrom(vector<int> c, vector<vector<int>> edges)
-    {
-        ChildT root{};
-        // adding dummy 0-value node to root,
-        // so that we had at least 3 nodes in the tree
-        c.push_back(0);
-        edges.push_back(vector<int>{1, c.size()});
-        _constructFrom(c, edges, &root);
-        return root;
-    }
-
-private:
-    friend void _constructFrom(const vector<int> &c, const vector<vector<int>> &edges, ChildT *root, ChildT *parent = nullptr, int i = 1)
-    {
-        root->value = c[i - 1];
-        root->parent = parent;
-        for (auto edge : edges)
-            if (edge[0] == i)
-            {
-                // push back new child
-                root->addChild(edge[1]);
-                _constructFrom(c, edges, root->children.back(), root, edge[1]);
-            }
-    }
 };
+
 
 class Forest : public GeneralForest<Forest>
 {
@@ -97,6 +76,31 @@ public:
         : GeneralForest{this, value, parent, children} {}
     Forest() : GeneralForest{this} {}
     friend class WeightForest;
+
+    static Forest from(vector<int> c, vector<vector<int>> edges)
+    {
+        Forest root{};
+        // adding dummy 0-value node to root,
+        // so that we had at least 3 nodes in the tree
+        c.push_back(0);
+        edges.push_back(vector<int>{1, c.size()});
+        _from(c, edges, &root);
+        return root;
+    }
+
+private:
+    friend void _from(const vector<int> &c, const vector<vector<int>> &edges, Forest *root, Forest *parent = nullptr, int i = 1)
+    {
+        root->value = c[i - 1];
+        root->parent = parent;
+        for (auto edge : edges)
+            if (edge[0] == i)
+            {
+                // push back new child
+                root->addChild(edge[1]);
+                _from(c, edges, root->children.back(), root, edge[1]);
+            }
+    }
 };
 
 class WeightForest : public GeneralForest<WeightForest>
@@ -105,6 +109,13 @@ public:
     WeightForest(int value, WeightForest *parent = nullptr, list<WeightForest *> children = list<WeightForest *>{})
         : GeneralForest{this, value, parent, children} {}
     WeightForest() : GeneralForest{this} {}
+
+   static WeightForest from(const Forest *root)
+    {
+        WeightForest wroot {root->value, nullptr};
+        _from(root, nullptr, &wroot);
+        return wroot;
+    }
 
     // friend pair<unique_ptr<Forest>, list<Forest *>::iterator> cutWeightNode(Forest *parent, list<Forest *>::iterator child_it)
     // {
@@ -134,21 +145,14 @@ public:
     //     }
     // }
 
-    static WeightForest from(const Forest *root)
-    {
-        WeightForest this_node {root->value, nullptr};
-        _weightsTree(root, nullptr, &this_node);
-        return this_node;
-    }
-
 private:
-    static WeightForest* _weightsTree(const Forest *root, WeightForest *parent = nullptr, WeightForest *this_node = nullptr)
+    static WeightForest* _from(const Forest *root, WeightForest *parent = nullptr, WeightForest *wroot = nullptr)
     {
-        // just a workaround to pass in stack-acllocated this_node
-        WeightForest *weight_node = this_node == nullptr ? new WeightForest{root->value, parent} : this_node;
+        // just a workaround to pass in stack-acllocated weighted root
+        WeightForest *weight_node = wroot == nullptr ? new WeightForest{root->value, parent} : wroot;
         for (auto child : root->children)
         {
-            WeightForest *child_sum = _weightsTree(child, weight_node);
+            WeightForest *child_sum = _from(child, weight_node);
             weight_node->addChild(child_sum);
             weight_node->value += child_sum->value;
         }
@@ -157,9 +161,10 @@ private:
     }
 };
 
+
 int main()
 {
-    Forest root = Forest::constructFrom(vector<int>{15, 12, 8, 14, 13}, vector<vector<int>>{{1, 2}, {1, 3}, {1, 4}, {4, 5}});
+    Forest root = Forest::from(vector<int>{15, 12, 8, 14, 13}, vector<vector<int>>{{1, 2}, {1, 3}, {1, 4}, {4, 5}});
     WeightForest wroot = WeightForest::from(&root);
     root.postorder();
     cout << '\n';
@@ -172,40 +177,8 @@ int main()
 // // Complete the balancedForest function below.
 // int balancedForest(vector<int> &&c, vector<vector<int>> &&edges)
 // {
-//     Forest wroot = Forest::constructFrom(std::move(c), std::move(edges));
+//     Forest wroot = Forest::from(std::move(c), std::move(edges));
 //     return wroot.balancing();
-// }
-
-// vector<string> split_string(string input_string)
-// {
-//     string::iterator new_end = unique(input_string.begin(), input_string.end(), [](const char &x, const char &y) {
-//         return x == y and x == ' ';
-//     });
-
-//     input_string.erase(new_end, input_string.end());
-
-//     while (input_string[input_string.length() - 1] == ' ')
-//     {
-//         input_string.pop_back();
-//     }
-
-//     vector<string> splits;
-//     char delimiter = ' ';
-
-//     size_t i = 0;
-//     size_t pos = input_string.find(delimiter);
-
-//     while (pos != string::npos)
-//     {
-//         splits.push_back(input_string.substr(i, pos - i));
-
-//         i = pos + 1;
-//         pos = input_string.find(delimiter, i);
-//     }
-
-//     splits.push_back(input_string.substr(i, min(pos, input_string.length()) - i + 1));
-
-//     return splits;
 // }
 
 // int main()
@@ -259,3 +232,36 @@ int main()
 
 //     return 0;
 // }
+
+
+vector<string> split_string(string input_string)
+{
+    string::iterator new_end = unique(input_string.begin(), input_string.end(), [](const char &x, const char &y) {
+        return x == y and x == ' ';
+    });
+
+    input_string.erase(new_end, input_string.end());
+
+    while (input_string[input_string.length() - 1] == ' ')
+    {
+        input_string.pop_back();
+    }
+
+    vector<string> splits;
+    char delimiter = ' ';
+
+    size_t i = 0;
+    size_t pos = input_string.find(delimiter);
+
+    while (pos != string::npos)
+    {
+        splits.push_back(input_string.substr(i, pos - i));
+
+        i = pos + 1;
+        pos = input_string.find(delimiter, i);
+    }
+
+    splits.push_back(input_string.substr(i, min(pos, input_string.length()) - i + 1));
+
+    return splits;
+}
