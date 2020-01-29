@@ -4,15 +4,13 @@ using namespace std;
 
 vector<string> split_string(string);
 
-
 class Forest;
 class WeightForest;
-
 
 template <typename ChildT>
 class GeneralForest
 {
-    // 'this' pointer of subclass  
+    // 'this' pointer of subclass
     ChildT *subthis;
 
 protected:
@@ -68,7 +66,6 @@ public:
     }
 };
 
-
 class Forest : public GeneralForest<Forest>
 {
 public:
@@ -110,11 +107,16 @@ public:
         : GeneralForest{this, value, parent, children} {}
     WeightForest() : GeneralForest{this} {}
 
-   static WeightForest from(const Forest *root)
+    static WeightForest from(const Forest *root)
     {
-        WeightForest wroot {root->value, nullptr};
+        WeightForest wroot{root->value, nullptr};
         _from(root, nullptr, &wroot);
         return wroot;
+    }
+
+    int balancing()
+    {
+        return firstCut(this);
     }
 
     // friend pair<unique_ptr<Forest>, list<Forest *>::iterator> cutWeightNode(Forest *parent, list<Forest *>::iterator child_it)
@@ -146,7 +148,7 @@ public:
     // }
 
 private:
-    static WeightForest* _from(const Forest *root, WeightForest *parent = nullptr, WeightForest *wroot = nullptr)
+    static WeightForest *_from(const Forest *root, WeightForest *parent = nullptr, WeightForest *wroot = nullptr)
     {
         // just a workaround to pass in stack-acllocated weighted root
         WeightForest *weight_node = wroot == nullptr ? new WeightForest{root->value, parent} : wroot;
@@ -159,8 +161,66 @@ private:
 
         return weight_node;
     }
-};
 
+    int firstCut(const WeightForest *parent, int global_balance = INT_MAX)
+    {
+        int balance;
+        auto it = parent->children.begin();
+        auto end = parent->children.end();
+        while (it != end)
+        {
+            WeightForest *current = *it;
+            auto next_it = cutChild(it);
+
+            finalPseudoCut(this, current->value, global_balance);
+
+            it = insertChild(it, next_it);
+        }
+
+        for (auto child : parent->children)
+        {
+            balance = firstCut(child, global_balance);
+            if (balance != -1 && balance < global_balance)
+                global_balance = balance;
+        }
+
+        return global_balance;
+    }
+
+    int finalPseudoCut(const WeightForest* parent, int sum1, int& global_balance)
+    {
+        int balance;
+        for (auto child : parent->children)
+        {
+            int sum2 = child->value;
+            int sum3 = this->value - child->value;
+            balance = balanceAmong(sum1, sum2, sum3);
+            if (balance != -1 && balance < global_balance)
+                global_balance = balance;
+        }
+
+        for (auto child : parent->children)
+        {
+            balance = finalPseudoCut(child, sum1, global_balance);
+            if (balance != -1 && balance < global_balance)
+                global_balance = balance;
+        }
+
+        return global_balance;
+    }
+
+    int balanceAmong(int sum1, int sum2, int sum3) {
+            if (sum1 == sum2 && sum1 > sum3) {
+                return sum1 - sum3;
+            } else if (sum2 == sum3 && sum2 > sum1) {
+                return sum2 - sum1;
+            } else if (sum1 == sum3 && sum1 > sum2){
+                return sum1 - sum2;
+            }
+
+            return -1;
+    }
+};
 
 int main()
 {
@@ -232,7 +292,6 @@ int main()
 
 //     return 0;
 // }
-
 
 vector<string> split_string(string input_string)
 {
