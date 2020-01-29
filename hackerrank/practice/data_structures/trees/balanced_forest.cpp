@@ -20,7 +20,13 @@ protected:
 
 public:
     GeneralForest(ChildT *subthis, int value, ChildT *parent = nullptr, list<ChildT *> children = list<ChildT *>{})
-        : value{value}, children{children}, parent{parent}, subthis{subthis} {}
+        : value{value}, children{children}, parent{parent}, subthis{subthis}
+    {
+        for (auto child : children)
+        {
+            child->parent = parent;
+        }
+    }
     GeneralForest(ChildT *subthis) : subthis{subthis} {}
     GeneralForest() = delete;
     ~GeneralForest()
@@ -66,6 +72,14 @@ public:
     }
 };
 
+struct Edge
+{
+    Edge(int v1, int v2) : v1{v1}, v2{v2} {}
+    int v1;
+    int v2;
+    bool visited{false};
+};
+
 class Forest : public GeneralForest<Forest>
 {
 public:
@@ -74,29 +88,34 @@ public:
     Forest() : GeneralForest{this} {}
     friend class WeightForest;
 
-    static Forest from(vector<int> c, vector<vector<int>> edges)
+    static Forest from(vector<int> &&c, vector<Edge> &&edges)
     {
-        Forest root{};
+        Forest root{c[0]};
         // adding dummy 0-value node to root,
         // so that we had at least 3 nodes in the tree
         c.push_back(0);
-        edges.push_back(vector<int>{1, c.size()});
+        edges.push_back(Edge{1, c.size()});
         _from(c, edges, &root);
         return root;
     }
 
 private:
-    friend void _from(const vector<int> &c, const vector<vector<int>> &edges, Forest *root, Forest *parent = nullptr, int i = 1)
+    friend void _from(const vector<int> &c, vector<Edge> &edges, Forest *root, int i = 1)
     {
-        root->value = c[i - 1];
-        root->parent = parent;
-        for (auto edge : edges)
-            if (edge[0] == i)
+        for (auto &edge : edges)
+        {
+            if (edge.visited)
+                continue;
+
+            if (edge.v1 == i || edge.v2 == i)
             {
-                // push back new child
-                root->addChild(edge[1]);
-                _from(c, edges, root->children.back(), root, edge[1]);
+                if (edge.v2 == i)
+                    swap(edge.v1, edge.v2);
+                root->addChild(c[edge.v2 - 1]);
+                edge.visited = true;
+                _from(c, edges, root->children.back(), edge.v2);
             }
+        }
     }
 };
 
@@ -110,51 +129,24 @@ public:
     static WeightForest from(const Forest *root)
     {
         WeightForest wroot{root->value, nullptr};
-        _from(root, nullptr, &wroot);
+        _from(root, &wroot);
         return wroot;
     }
 
     int balancing()
     {
-        return firstCut(this);
+        int balance = firstCut(this);
+        return balance == INT_MAX ? -1 : balance;
     }
 
-    // friend pair<unique_ptr<Forest>, list<Forest *>::iterator> cutWeightNode(Forest *parent, list<Forest *>::iterator child_it)
-    // {
-    //     Forest *current = *child_it;
-    //     int cut_weight = current->value;
-    //     while (current->parent != nullptr)
-    //     {
-    //         current = current->parent;
-    //         current->value -= cut_weight;
-    //     }
-    //     current = *child_it;
-    //     auto next = parent->children.erase(child_it);
-
-    //     return {unique_ptr<Forest>{current}, next};
-    // }
-
-    // friend void insertWeightNode(list<Forest *>::iterator child_it, list<Forest *>::iterator after_child_it)
-    // {
-    //     Forest *current = *child_it;
-    //     Forest *parent = *affter_child_it->parent;
-    //     parent->children.insert(after_child_it, child_it);
-    //     int insert_weight = current->value;
-    //     while (parent != nullptr)
-    //     {
-    //         parent->value += insert_weight;
-    //         parent = parent->parent;
-    //     }
-    // }
-
 private:
-    static WeightForest *_from(const Forest *root, WeightForest *parent = nullptr, WeightForest *wroot = nullptr)
+    static WeightForest *_from(const Forest *root, WeightForest *wroot = nullptr)
     {
         // just a workaround to pass in stack-acllocated weighted root
-        WeightForest *weight_node = wroot == nullptr ? new WeightForest{root->value, parent} : wroot;
+        WeightForest *weight_node = wroot == nullptr ? new WeightForest{root->value} : wroot;
         for (auto child : root->children)
         {
-            WeightForest *child_sum = _from(child, weight_node);
+            WeightForest *child_sum = _from(child);
             weight_node->addChild(child_sum);
             weight_node->value += child_sum->value;
         }
@@ -162,22 +154,20 @@ private:
         return weight_node;
     }
 
-    int firstCut(const WeightForest *parent, int global_balance = INT_MAX)
+    int firstCut(WeightForest *par, int global_balance = INT_MAX)
     {
         int balance;
-        auto it = parent->children.begin();
-        auto end = parent->children.end();
+        auto it = par->children.begin();
+        auto end = par->children.end();
         while (it != end)
         {
             WeightForest *current = *it;
             auto next_it = cutChild(it);
-
             finalPseudoCut(this, current->value, global_balance);
-
-            it = insertChild(it, next_it);
+            it = insertChild(next_it, current, par);
         }
 
-        for (auto child : parent->children)
+        for (auto child : par->children)
         {
             balance = firstCut(child, global_balance);
             if (balance != -1 && balance < global_balance)
@@ -187,10 +177,10 @@ private:
         return global_balance;
     }
 
-    int finalPseudoCut(const WeightForest* parent, int sum1, int& global_balance)
+    int finalPseudoCut(WeightForest *par, int sum1, int &global_balance)
     {
         int balance;
-        for (auto child : parent->children)
+        for (auto child : par->children)
         {
             int sum2 = child->value;
             int sum3 = this->value - child->value;
@@ -199,7 +189,7 @@ private:
                 global_balance = balance;
         }
 
-        for (auto child : parent->children)
+        for (auto child : par->children)
         {
             balance = finalPseudoCut(child, sum1, global_balance);
             if (balance != -1 && balance < global_balance)
@@ -209,89 +199,117 @@ private:
         return global_balance;
     }
 
-    int balanceAmong(int sum1, int sum2, int sum3) {
-            if (sum1 == sum2 && sum1 > sum3) {
-                return sum1 - sum3;
-            } else if (sum2 == sum3 && sum2 > sum1) {
-                return sum2 - sum1;
-            } else if (sum1 == sum3 && sum1 > sum2){
-                return sum1 - sum2;
-            }
+    int balanceAmong(int sum1, int sum2, int sum3)
+    {
+        if (sum1 == sum2 && sum1 > sum3)
+        {
+            return sum1 - sum3;
+        }
+        else if (sum2 == sum3 && sum2 > sum1)
+        {
+            return sum2 - sum1;
+        }
+        else if (sum1 == sum3 && sum1 > sum2)
+        {
+            return sum1 - sum2;
+        }
 
-            return -1;
+        return -1;
+    }
+
+    friend list<WeightForest *>::iterator cutChild(list<WeightForest *>::iterator it)
+    {
+        WeightForest *current = *it;
+        int cut_weight = current->value;
+        while (current->parent != nullptr)
+        {
+            current = current->parent;
+            current->value -= cut_weight;
+        }
+
+        current = *it;
+        it = current->parent->children.erase(it);
+        current->parent = nullptr;
+
+        return it;
+    }
+
+    friend list<WeightForest *>::iterator insertChild(list<WeightForest *>::iterator next_it, WeightForest *current, WeightForest *par)
+    {
+        current->parent = par;
+        auto inserted = par->children.insert(next_it, current);
+
+        int insert_weight = current->value;
+        while (par != nullptr)
+        {
+            par->value += insert_weight;
+            par = par->parent;
+        }
+
+        return ++inserted;
     }
 };
 
-int main()
+// Complete the balancedForest function below.
+int balancedForest(vector<int> &&c, vector<Edge> &&edges)
 {
-    Forest root = Forest::from(vector<int>{15, 12, 8, 14, 13}, vector<vector<int>>{{1, 2}, {1, 3}, {1, 4}, {4, 5}});
-    WeightForest wroot = WeightForest::from(&root);
+    Forest root = Forest::from(std::move(c), std::move(edges));
     root.postorder();
     cout << '\n';
+    WeightForest wroot = WeightForest::from(&root);
     wroot.postorder();
     cout << '\n';
+    return wroot.balancing();
+}
+
+int main()
+{
+    ofstream fout(getenv("OUTPUT_PATH"));
+
+    int q;
+    cin >> q;
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    for (int q_itr = 0; q_itr < q; q_itr++)
+    {
+        int n;
+        cin >> n;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+        string c_temp_temp;
+        getline(cin, c_temp_temp);
+
+        vector<string> c_temp = split_string(c_temp_temp);
+
+        vector<int> c(n);
+
+        for (int i = 0; i < n; i++)
+        {
+            int c_item = stoi(c_temp[i]);
+
+            c[i] = c_item;
+        }
+
+        vector<Edge> edges;
+        int first, second;
+        while (--n)
+        {
+            cin >> first >> second;
+            edges.push_back(Edge{first, second});
+
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
+
+        int result = balancedForest(std::move(c), std::move(edges));
+
+        fout << result << "\n";
+        cout << result << "\n";
+    }
+
+    fout.close();
 
     return 0;
 }
-
-// // Complete the balancedForest function below.
-// int balancedForest(vector<int> &&c, vector<vector<int>> &&edges)
-// {
-//     Forest wroot = Forest::from(std::move(c), std::move(edges));
-//     return wroot.balancing();
-// }
-
-// int main()
-// {
-//     ofstream fout(getenv("OUTPUT_PATH"));
-
-//     int q;
-//     cin >> q;
-//     cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-//     for (int q_itr = 0; q_itr < q; q_itr++)
-//     {
-//         int n;
-//         cin >> n;
-//         cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-//         string c_temp_temp;
-//         getline(cin, c_temp_temp);
-
-//         vector<string> c_temp = split_string(c_temp_temp);
-
-//         vector<int> c(n);
-
-//         for (int i = 0; i < n; i++)
-//         {
-//             int c_item = stoi(c_temp[i]);
-
-//             c[i] = c_item;
-//         }
-
-//         vector<vector<int>> edges(n - 1);
-//         for (int i = 0; i < n - 1; i++)
-//         {
-//             edges[i].resize(2);
-
-//             for (int j = 0; j < 2; j++)
-//             {
-//                 cin >> edges[i][j];
-//             }
-
-//             cin.ignore(numeric_limits<streamsize>::max(), '\n');
-//         }
-
-//         int result = balancedForest(std::move(c), std::move(edges));
-
-//         cout << result << "\n";
-//         fout << result << "\n";
-//     }
-
-//     fout.close();
-
-//     return 0;
-// }
 
 vector<string> split_string(string input_string)
 {
