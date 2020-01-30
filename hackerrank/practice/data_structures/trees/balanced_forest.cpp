@@ -121,6 +121,7 @@ private:
 
 class WeightForest : public GeneralForest<WeightForest>
 {
+    bool visited {false};
 public:
     WeightForest(int value, WeightForest *parent = nullptr, list<WeightForest *> children = list<WeightForest *>{})
         : GeneralForest{this, value, parent, children} {}
@@ -172,6 +173,7 @@ private:
             balance = firstCut(child, global_balance);
             if (balance != -1 && balance < global_balance)
                 global_balance = balance;
+            child->visited = true;
         }
 
         return global_balance;
@@ -182,6 +184,7 @@ private:
         int balance;
         for (auto child : par->children)
         {
+            if (child->visited) continue;
             int sum2 = child->value;
             int sum3 = this->value - child->value;
             balance = balanceAmong(sum1, sum2, sum3);
@@ -191,6 +194,7 @@ private:
 
         for (auto child : par->children)
         {
+            if (child->visited) continue;
             balance = finalPseudoCut(child, sum1, global_balance);
             if (balance != -1 && balance < global_balance)
                 global_balance = balance;
@@ -201,15 +205,15 @@ private:
 
     int balanceAmong(int sum1, int sum2, int sum3)
     {
-        if (sum1 == sum2 && sum1 > sum3)
+        if (sum1 == sum2 && sum1 >= sum3)
         {
             return sum1 - sum3;
         }
-        else if (sum2 == sum3 && sum2 > sum1)
+        else if (sum2 == sum3 && sum2 >= sum1)
         {
             return sum2 - sum1;
         }
-        else if (sum1 == sum3 && sum1 > sum2)
+        else if (sum1 == sum3 && sum1 >= sum2)
         {
             return sum1 - sum2;
         }
