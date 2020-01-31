@@ -7,21 +7,21 @@ vector<string> split_string(string);
 struct Index {
     int val;
     int index;
-}
+};
 
 // Complete the solve function below.
 int solve(vector<int> arr) {
     stack<Index> st {};
-    st.push(Index{arr[0], 0});
+    st.push(Index{arr[0], 1});
     int res = 0;
-    for (int i = 1; i < arr.size() && !st.empty(); ++i) {
-        int val = st.top().val;
-        while (arr[i] > val) {
+    for (int i = 1; i < arr.size(); ++i) {
+        while (!st.empty() && arr[i] > st.top().val) {
             st.pop();
-            int left = st.top().index, right = i;
+            int left = st.top().index;
+            int right = i;
             res = max(res, left * right);
         }
-        st.push(Index{arr[i], i});
+        st.push(Index{arr[i], i + 1});
     }
 
     return res;
@@ -51,6 +51,7 @@ int main()
     int result = solve(arr);
 
     fout << result << "\n";
+    cout << result << "\n";
 
     fout.close();
 
