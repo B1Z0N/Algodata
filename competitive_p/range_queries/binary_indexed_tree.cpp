@@ -32,6 +32,13 @@ int sum(const std::vector<int>& tree, int k)
     return sum;
 }
 
+void perform(std::vector<int>& tree, std::function<void(int&)> cb, int k) {
+    while (k <= tree.size()) {
+        cb(tree[k - 1]);
+        k += highest_power_2(k);
+    }
+}
+
 int main()
 {
     auto tree = get_tree(std::vector<int>{1, 3, 4, 8, 6, 1, 4, 2});
@@ -40,6 +47,10 @@ int main()
         std::cout << x << ' ';
     }
     std::cout << '\n';
+
+    perform(tree, [](int& x) {
+        x += 10;
+    }, 3);
 
     int k;
     std::cin >> k;
