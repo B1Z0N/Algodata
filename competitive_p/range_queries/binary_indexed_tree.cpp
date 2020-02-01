@@ -1,5 +1,10 @@
 #include <bits/stdc++.h>
 
+/**
+ *  Note:
+ *      all of this are indexed starting from one ( [1, 2 ... n] )
+ */
+
 inline int highest_power_2(int n)
 {
     return (n & (~(n - 1)));
@@ -32,6 +37,11 @@ int sum(const std::vector<int>& tree, int k)
     return sum;
 }
 
+int sum(const std::vector<int>& tree, int a, int b)
+{
+    return sum(tree, b) - sum(tree, a - 1);
+}
+
 void perform(std::vector<int>& tree, std::function<void(int&)> cb, int k) {
     while (k <= tree.size()) {
         cb(tree[k - 1]);
@@ -52,8 +62,8 @@ int main()
         x += 10;
     }, 3);
 
-    int k;
-    std::cin >> k;
-    std::cout << sum(tree, k) << '\n';
+    int a, b;
+    std::cin >> a >> b;
+    std::cout << sum(tree, a, b) << '\n';
     return 0;
 }
