@@ -43,8 +43,13 @@ int sum(const std::vector<int>& tree, int a, int b)
 }
 
 void perform(std::vector<int>& tree, std::function<void(int&)> cb, int k) {
+    int prev = tree[k - 1];
+    cb(tree[k - 1]);
+    int next = tree[k - 1];
+
     while (k <= tree.size()) {
-        cb(tree[k - 1]);
+        tree[k - 1] -= prev;
+        tree[k - 1] += next;
         k += highest_power_2(k);
     }
 }
