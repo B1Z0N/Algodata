@@ -115,16 +115,10 @@ private:
    * T1 T2     Zag (Left Rotation)         T2  T3
    */
   SplayTreeNode *zig(SplayTreeNode *y) {
-    SplayTreeNode *pivot{y->left};
-    SplayTreeNode *orphan{pivot->right};
-
-    pivot->right = y;
-    y->left = orphan;
-
-    y->height = std::max(height(y->left), height(y->right)) + 1;
-    pivot->height = std::max(height(pivot->left), height(pivot->right)) + 1;
-
-    return pivot;
+    SplayTreeNode *x = y->left;
+    y->left = x->right;
+    x->right = y;
+    return y;
   }
 
   /**
@@ -135,110 +129,60 @@ private:
    * T1 T2     Zag (Left Rotation)         T2  T3
    */
   SplayTreeNode *zag(SplayTreeNode *x) {
-    SplayTreeNode *pivot{x->right};
-    SplayTreeNode *orphan{pivot->left};
-
-    pivot->left = x;
-    x->right = orphan;
-
-    x->height = std::max(height(x->left), height(x->right)) + 1;
-    pivot->height = std::max(height(pivot->left), height(pivot->right)) + 1;
-
-    return pivot;
-  }
-
-  /**
-   *    Zig-Zag (Right Left Case):
-   *      G                                           G                                                 X       
-   *     /  \                                          /  \                                              /      \      
-   *  T1   P    rightRotate(P)          T1   X     leftRotate(G)                G        P
-   *        / \   =============>            / \    ============>        / \        / \   
-   *     X  T4                                      T2   P                                  T1 T2 T3  T4
-   *     / \                                                  / \                
-   * T2  T3                                           T3  T4  
-   */
-  SplayTreeNode *zigzag(SplayTreeNode *G) {
-    G->right = zig(G->right);
-    return zag(G);
-  }
-
-  /**
-   *     Zag-Zig (Left Right Case):
-   *            G                                            G                                                      X
-   *            / \                                           /   \                                                   /    \
-   *          P  T4   leftRotate(P)              X     T4    rightRotate(G)                  P      G
-   *         /  \        ============>       / \            ============>             / \        / \
-   *      T1   X                                     P  T3                                              T1 T2  T3  T4
-   *             / \                                    / \                                       
-   *         T2  T3                             T1  T2                                   
-   */
-  SplayTreeNode *zagzig(SplayTreeNode *G) {
-      G->left = zag(G->left);
-      return zig(G);
-  }
-
-  /**
-   *      Zig-Zig (Left Left Case):
-   *             G                                             P                                                     X       
-   *            / \                                            /    \                                                   / \      
-   *           P  T4   rightRotate(G)           X      G         rightRotate(P)              T1   P     
-   *          / \         ============>      / \       / \       ============>                 / \    
-   *        X  T3                                   T1 T2  T3 T4                                            T2  G
-   *       / \                                                                                                                 / \ 
-   *    T1 T2                                                                                                          T3  T4 
-   */
-  SplayTreeNode *zigzig(SplayTreeNode *G) {
-    return zig(zig(G));
-  }
-
-  /**
-   *      Zag-Zag (Right Right Case):
-   *        G                                                   P                                               X       
-   *       /  \                                                 /   \                                              / \      
-   *    T1   P      leftRotate(G)                 G     X     leftRotate(P)               P   T4
-   *           / \     ============>          / \     / \    ============>        / \   
-   *       T2   X                                    T1 T2 T3 T4                               G   T3
-   *              / \                                                                                      / \ 
-   *           T3 T4                                                                               T1  T2
-   */
-  SplayTreeNode *zagzag(SplayTreeNode *G) {
-    return zag(zag(G));
+    SplayTreeNode *y = x->right;  
+    x->right = y->left;  
+    y->left = x;  
+    return y;  
   }
 
 private:
-  SplayTreeNode* splay(SplayTreeNode* root, const T& key) {
-    if (root == NULL)
+  template <typename U> SplayTreeNode *splay(SplayTreeNode *root, const U& key) {
+    if (root == nullptr || root->key == key) return root;
+
+    if (root->key > key) {
+      if (root->left == nullptr) return root;
+
+      if (root->left->key > key) {
+        root->left->left = splay(root->left->left, key);
+        root = zig(root);
+      } else if (root->left->key < key) {
+        root->left->right = splay(root->left->right, key);
+        if (root->left->right) root->left = zag(root->left);
+      }
+
+      return (root->left == nullptr) ? root : zig(root);
+    } else {
+      if (root->right == nullptr) return root;
+
+      if (root->right->key > key) {
+        root->right->left = splay(root->right->left, key);
+        if (root->right->left) root->right = zig(root->right);
+      } else if (root->right->key < key) {
+        root->right->right = splay(root->right->right, key);
+        root = zag(root);
+      }
+
+      return (root->right == nullptr) ? root : zag(root);
+    }
   }
+
 private:
   SplayTreeNode *insert(SplayTreeNode *root, const T &key) {
-    if (!root)
-      return new SplayTreeNode(key);
-    if (key < root->key)
-      root->left = insert(root->left, key);
-    else if (root->key < key)
-      root->right = insert(root->right, key);
+    if (!root) return new SplayTreeNode(key);
 
-    root->height = std::max(height(root->left), height(root->right)) + 1;
+    root = splay(root, key);
+    if (node->key == key) return root;
 
-    if (balance(root) > 1) {
-      if (key < root->left->key) {
-        return rotate_right(root);
-      }
-      if (root->left->key < key) {
-        root->left = rotate_left(root->left);
-        return rotate_right(root);
-      }
-    } else if (balance(root) < -1) {
-      if (root->right->key < key) {
-        return rotate_left(root);
-      }
-      if (key < root->right->key) {
-        root->right = rotate_right(root->right);
-        return rotate_left(root);
-      }
+    SplayTreeNode* node = new SplayTreeNode(key);
+    if (root->key > key) {
+      node->right = root;
+      std::swap(node->left, root->left);
+    } else {
+      node->left = root;
+      std::swap(node->right, root->right);
     }
 
-    return root;
+    return node;
   }
 
   template <typename U> SplayTreeNode *remove(SplayTreeNode *root, const U &key) {
@@ -266,9 +210,6 @@ private:
         SplayTreeNode *min{minimum(root->right)};
         root->key = min->key;
         root->right = remove(root->right, min->key);
-        // SplayTreeNode * max{ maximum(root->left) };
-        // root->key = max->key;
-        // root->left = remove(root->left, max->key);
       }
     }
 
@@ -296,16 +237,7 @@ private:
   }
 
   template <typename U> SplayTreeNode *search(SplayTreeNode *root, const U &key) {
-    while (root) {
-      if (root->key < key) {
-        root = root->right;
-      } else if (key < root->key) {
-        root = root->left;
-      } else {
-        return root;
-      }
-    }
-    return nullptr;
+    return splay(root, key);
   }
 
 private:
