@@ -188,54 +188,24 @@ private:
     return node;
   }
 
-  template <typename U> SplayTreeNode *remove(SplayTreeNode *root, const U &key) {
-    if (!root)
-      return nullptr;
-    if (key < root->key)
-      root->left = remove(root->left, key);
-    else if (root->key < key)
-      root->right = remove(root->right, key);
-    else {
-      if (!root->left && !root->right) {
-        delete root;
-        root = nullptr;
-      } else if (!root->left) {
-        SplayTreeNode *tmp{root};
-        root = root->right;
-        delete tmp;
-        tmp = nullptr;
-      } else if (!root->right) {
-        SplayTreeNode *tmp{root};
-        root = root->left;
-        delete tmp;
-        tmp = nullptr;
-      } else {
-        SplayTreeNode *min{minimum(root->right)};
-        root->key = min->key;
-        root->right = remove(root->right, min->key);
-      }
+  template <typename U>
+  SplayTreeNode *remove(SplayTreeNode *root, const U &key) {
+    if (!root) return nullptr;
+    SplayTreeNode *temp;
+    root = splay(root, key);
+
+    if (key != root->key) return root;
+
+    if (!root->left) {
+      temp = root;
+      root = root->right;
+    } else {
+      temp = root;
+      root = splay(root->left, key);
+      root->right = temp->right;
     }
 
-    if (!root)
-      return nullptr;
-
-    root->height = std::max(height(root->left), height(root->right)) + 1;
-
-    if (balance(root) > 1) {
-      if (balance(root->left) >= 0) {
-        return rotate_right(root);
-      }
-      root->left = rotate_left(root->left);
-      return rotate_right(root);
-    }
-    if (balance(root) < -1) {
-      if (balance(root->right) <= 0) {
-        return rotate_left(root);
-      }
-      root->right = rotate_right(root->right);
-      return rotate_left(root);
-    }
-
+    delete temp;
     return root;
   }
 
