@@ -107,6 +107,109 @@ private:
   }
 
 private:
+  /**
+   *      y                                               x
+   *     /  \     Zig (Right Rotation)         /  \
+   *    x   T3   – - – - – - – - - ->         T1   y 
+   *   /  \       < - - - - - - - - -                      / \
+   * T1 T2     Zag (Left Rotation)         T2  T3
+   */
+  SplayTreeNode *zig(SplayTreeNode *y) {
+    SplayTreeNode *pivot{y->left};
+    SplayTreeNode *orphan{pivot->right};
+
+    pivot->right = y;
+    y->left = orphan;
+
+    y->height = std::max(height(y->left), height(y->right)) + 1;
+    pivot->height = std::max(height(pivot->left), height(pivot->right)) + 1;
+
+    return pivot;
+  }
+
+  /**
+   *      y                                               x
+   *     /  \     Zig (Right Rotation)         /  \
+   *    x   T3   – - – - – - – - - ->         T1   y 
+   *   /  \       < - - - - - - - - -                      / \
+   * T1 T2     Zag (Left Rotation)         T2  T3
+   */
+  SplayTreeNode *zag(SplayTreeNode *x) {
+    SplayTreeNode *pivot{x->right};
+    SplayTreeNode *orphan{pivot->left};
+
+    pivot->left = x;
+    x->right = orphan;
+
+    x->height = std::max(height(x->left), height(x->right)) + 1;
+    pivot->height = std::max(height(pivot->left), height(pivot->right)) + 1;
+
+    return pivot;
+  }
+
+  /**
+   *    Zig-Zag (Right Left Case):
+   *      G                                           G                                                 X       
+   *     /  \                                          /  \                                              /      \      
+   *  T1   P    rightRotate(P)          T1   X     leftRotate(G)                G        P
+   *        / \   =============>            / \    ============>        / \        / \   
+   *     X  T4                                      T2   P                                  T1 T2 T3  T4
+   *     / \                                                  / \                
+   * T2  T3                                           T3  T4  
+   */
+  SplayTreeNode *zigzag(SplayTreeNode *G) {
+    G->right = zig(G->right);
+    return zag(G);
+  }
+
+  /**
+   *     Zag-Zig (Left Right Case):
+   *            G                                            G                                                      X
+   *            / \                                           /   \                                                   /    \
+   *          P  T4   leftRotate(P)              X     T4    rightRotate(G)                  P      G
+   *         /  \        ============>       / \            ============>             / \        / \
+   *      T1   X                                     P  T3                                              T1 T2  T3  T4
+   *             / \                                    / \                                       
+   *         T2  T3                             T1  T2                                   
+   */
+  SplayTreeNode *zagzig(SplayTreeNode *G) {
+      G->left = zag(G->left);
+      return zig(G);
+  }
+
+  /**
+   *      Zig-Zig (Left Left Case):
+   *             G                                             P                                                     X       
+   *            / \                                            /    \                                                   / \      
+   *           P  T4   rightRotate(G)           X      G         rightRotate(P)              T1   P     
+   *          / \         ============>      / \       / \       ============>                 / \    
+   *        X  T3                                   T1 T2  T3 T4                                            T2  G
+   *       / \                                                                                                                 / \ 
+   *    T1 T2                                                                                                          T3  T4 
+   */
+  SplayTreeNode *zigzig(SplayTreeNode *G) {
+    return zig(zig(G));
+  }
+
+  /**
+   *      Zag-Zag (Right Right Case):
+   *        G                                                   P                                               X       
+   *       /  \                                                 /   \                                              / \      
+   *    T1   P      leftRotate(G)                 G     X     leftRotate(P)               P   T4
+   *           / \     ============>          / \     / \    ============>        / \   
+   *       T2   X                                    T1 T2 T3 T4                               G   T3
+   *              / \                                                                                      / \ 
+   *           T3 T4                                                                               T1  T2
+   */
+  SplayTreeNode *zagzag(SplayTreeNode *G) {
+    return zag(zag(G));
+  }
+
+private:
+  SplayTreeNode* splay(SplayTreeNode* root, const T& key) {
+    if (root == NULL)
+  }
+private:
   SplayTreeNode *insert(SplayTreeNode *root, const T &key) {
     if (!root)
       return new SplayTreeNode(key);
