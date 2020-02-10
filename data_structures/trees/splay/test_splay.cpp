@@ -30,6 +30,9 @@ int main() {
     printlvl(spt);
     spt.insert(5);
     printlvl(spt);
+    
+    spt.remove(2);
+    printlvl(spt);
 
     printin(spt);
 
