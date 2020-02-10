@@ -118,7 +118,7 @@ private:
     SplayTreeNode *x = y->left;
     y->left = x->right;
     x->right = y;
-    return y;
+    return x;
   }
 
   /**
@@ -168,18 +168,21 @@ private:
 
 private:
   SplayTreeNode *insert(SplayTreeNode *root, const T &key) {
-    if (!root) return new SplayTreeNode(key);
-
+    if (root == nullptr) return new SplayTreeNode{key};
     root = splay(root, key);
-    if (node->key == key) return root;
+    if (root->key == key) return root;
 
-    SplayTreeNode* node = new SplayTreeNode(key);
-    if (root->key > key) {
+    auto *node = new SplayTreeNode{key};
+
+    if (root->key > key)
+    {
       node->right = root;
-      std::swap(node->left, root->left);
+      node->left = root->left;
+      root->left = nullptr;
     } else {
       node->left = root;
-      std::swap(node->right, root->right);
+      node->right = root->right;
+      root->right = nullptr;
     }
 
     return node;
@@ -305,8 +308,8 @@ public:
   }
 
   template <typename U> auto search(const U &key) {
-    auto res = search(mRoot, key);
-    return res ? std::optional<std::reference_wrapper<T>>{res->key}
+    mRoot = search(mRoot, key);
+    return mRoot->key == key ? std::optional<std::reference_wrapper<T>>{mRoot->key}
                : std::nullopt;
   }
 
