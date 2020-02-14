@@ -9,36 +9,24 @@ typedef struct node {
 } node;
 */
 
-node *insert(node *root, int val) {
-	if (root == nullptr) return new node{val};
-
-	if (root->val > val) {
-		root->left = insert(root->left, val);
-	} else if (root->val < val) {
-		root->right = insert(root->right, val);
-	} else {}
-	
-	balance(root, val);
-	return root;
-}
-
-
-right_rotate(node *&root) {
+void right_rotate(node *&root) {
 	node* new_root = root->left;
 	root->left = root->left->right;
         new_root->right = root;
 	root = new_root;	
 }
 
-left_rotate(node *&root) {
+void left_rotate(node *&root) {
 	node* new_root = root->right;
 	root->right = root->right->left;
         new_root->left = root;
 	root = new_root;	
 }
 
+inline int height(node *nd) { return nd ? nd->ht : -1; }
+
 bool balanced(node *root) {
-	return abs(root->left->ht - root->right->ht) < 2;
+	return abs(height(root->left) - height(root->right)) < 2;
 }
 
 void balance(node *&gparent, int child_val) {
@@ -59,3 +47,15 @@ void balance(node *&gparent, int child_val) {
 	}
 }
 
+node *insert(node *root, int val) {
+    if (root == nullptr) return new node{val};
+
+    if (root->val > val) {
+        root->left = insert(root->left, val);
+    } else if (root->val < val) {
+        root->right = insert(root->right, val);
+    } else {}
+    
+    balance(root, val);
+    return root;
+}
