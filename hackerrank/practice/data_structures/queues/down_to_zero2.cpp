@@ -10,12 +10,13 @@ int main()
 	nums[0] = 0, nums[1] = 1, nums[2] = 2, nums[3] = 3;
 	for (int i = 4; i < NUMS_SIZE; ++i) nums[i] = -1;
 
-	for (int i = 4; i < NUMS_SIZE; ++i) {
-			int sol = nums[i - 1];
-			for (int j = (int) (sqrt(i) + 1); j < i - 1; ++j) {
-				if (i % j == 0 && nums[j] < sol) sol = nums[j];
+	for (int i = 0; i < NUMS_SIZE; ++i) {
+			if (nums[i] == -1 || nums[i] > (nums[i - 1] + 1)) 
+					nums[i]  = nums[i - 1] + 1;
+			for (int j = 1; j <= i && j * i < NUMS_SIZE; ++j) {
+				if (nums[j * i] == -1 || nums[j * i] > nums[i] + 1)
+					nums[j * i] = nums[i] + 1;
 			}
-			nums[i] = sol + 1;
 	}
 
     ofstream fout(getenv("OUTPUT_PATH"));
