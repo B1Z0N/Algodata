@@ -3,34 +3,40 @@
 using namespace std;
 
 class quaue {
-	stack<int> st;
+	stack<int> rear;
+	stack<int> front;
 public:
 
 	quaue() = default;
 	
 	void push(int val) {
-		st.push(val);
+		rear.push(val);
 	}
 
-	void pop() {
-		if (st.size() == 1) st.pop();
-		else {
-			int temp = st.top();
-			st.pop();
-			pop();
-			st.push(temp);
-		}
+   	void  pop() { 
+        	if (rear.empty() && front.empty()) return; // just to ensure that tests timed out
+        	
+		if (front.empty()) { 
+            		while (!rear.empty()) { 
+                		front.push(rear.top()); 
+                		rear.pop(); 
+            		} 
+        	} 
+  
+        	front.pop(); 
 	}
-	
-	int front() {
-		if (st.size() == 1) return st.top();
-		else {
-			int temp = st.top();
-			st.pop();
-			int res = front();
-			st.push(temp);
-			return res;
-		}
+
+	int frontt() {
+	    	if (rear.empty() && front.empty()) return -1; // just to ensure that tests timed out
+        	
+		if (front.empty()) { 
+            		while (!rear.empty()) { 
+                		front.push(rear.top()); 
+                		rear.pop(); 
+            		} 
+        	} 
+  
+        	return  front.top(); 
 	}
 };
 
@@ -47,7 +53,7 @@ int main() {
 		} else if (type == 2) {
 			q.pop(); 	
 		} else if (type == 3) {
-			cout << q.front() << '\n';
+			cout << q.frontt() << '\n';
 		}
 	}
 	
