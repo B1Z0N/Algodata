@@ -4,50 +4,25 @@ using namespace std;
 
 vector<string> split_string(string);
 
-struct Tops {
-	int a{};
-	int b{};
-	
-	Tops(int a, int b) 
-		:a{a}, b{b} {}
-	Tops() = default;
-	
-	friend bool operator==(const Tops& fst, const Tops& snd) {
-		return fst.a == snd.a && fst.b == snd.b;
-	}
-};
-
-struct TopsHash {
-	size_t operator()(const Tops& tops) const {
-		return std::hash<int>()(tops.a) ^ std::hash<int>()(tops.b);
-	}
-};
-
-int actualTwoStacks(int x, unordered_map<Tops, int, TopsHash>& remember, 
-		const vector<int>& a, const vector<int>& b, 
-            	Tops tops) {
-    if (x < 0) return 0;
-
-    if (remember.find(tops) != remember.end()) 
-	    return remember[tops];
-
-    int i1 = 0, i2 = 0;
-    if (a.size() > tops.a) 
-	    i1 = actualTwoStacks(x - a[tops.a], remember, a, b, Tops{tops.a + 1, tops.b});
-    if (b.size() > tops.b) 
-	    i2 = actualTwoStacks(x - b[tops.b], remember, a, b, Tops{tops.a, tops.b + 1});
-    
-    int answ = max(i1, i2) + 1;
-    remember[tops] = answ;
-    return answ;
-}
-
 /*
  * Complete the twoStacks function below.
  */
 int twoStacks(int x, const vector<int>& a, const vector<int>& b) {
-	unordered_map<Tops, int, TopsHash> remember;
-	return actualTwoStacks(x, remember, a, b, Tops{});
+	int sum = 0, topa = 0, topb = 0;
+	while (sum <= x && topa < a.size()) {
+		sum += a[topa++];
+	}
+	int steps = topa - 1;
+
+	while (topa > 0) {
+		sum -= a[--topa];
+		while (sum <= x && topb < b.size()) {
+			sum += b[topb++];
+		}
+		steps = max(steps, topa + topb);
+	}
+
+	return steps;
 }
 
 int main()
