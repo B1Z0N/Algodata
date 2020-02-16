@@ -9,17 +9,17 @@ vector<string> split_string(string);
  */
 int twoStacks(int x, const vector<int>& a, const vector<int>& b) {
 	int sum = 0, topa = 0, topb = 0;
-	while (sum <= x && topa < a.size()) {
+	while (sum + a[topa] <= x && topa < a.size()) {
 		sum += a[topa++];
 	}
-	int steps = topa - 1;
+	int steps = topa;
 
-	while (topa > 0) {
-		sum -= a[--topa];
-		while (sum <= x && topb < b.size()) {
+	while (topa >= 0) {
+		while (sum + b[topb] <= x && topb < b.size()) {
 			sum += b[topb++];
 		}
 		steps = max(steps, topa + topb);
+		sum -= a[--topa];
 	}
 
 	return steps;
@@ -71,7 +71,7 @@ int main()
             b[b_itr] = b_item;
         }
 
-        int result = twoStacks(x, a, b) - 1;
+        int result = twoStacks(x, a, b);
 
         fout << result << "\n";
         cout << result << "\n";
