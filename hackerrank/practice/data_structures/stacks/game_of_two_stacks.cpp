@@ -9,13 +9,13 @@ vector<string> split_string(string);
  */
 int twoStacks(int x, const vector<int>& a, const vector<int>& b, 
                 int topa = 0, int topb = 0) {
-    if (x < 0) return -1;
+    if (x < 0) return 0;
 
     int i1 = 0, i2 = 0;
     if (a.size() > topa) i1 = twoStacks(x - a[topa], a, b, topa + 1, topb);
     if (b.size() > topb) i2 = twoStacks(x - b[topb], a, b, topa, topb + 1);
     
-    return std::max(i1, i2) + 1;
+    return max(i1, i2) + 1;
 }
 
 int main()
@@ -64,9 +64,10 @@ int main()
             b[b_itr] = b_item;
         }
 
-        int result = twoStacks(x, a, b);
+        int result = twoStacks(x, a, b) - 1;
 
         fout << result << "\n";
+        cout << result << "\n";
     }
 
     fout.close();
