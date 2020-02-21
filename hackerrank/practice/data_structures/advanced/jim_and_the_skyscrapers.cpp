@@ -4,24 +4,17 @@ using namespace std;
 
 vector<string> split_string(string);
 
-typedef pair<int, int> pii;
-
-int fact(int n) {
-    return n == 0 ? 1 : fact(n - 1) * n;
-}
-
-int permut2(int n) {
-    int fact_n_2 = fact(n - 2);
-    return (fact_n_2 * n * (n - 1))/ (2 * fact_n_2);
+long long permut2(long long n) {
+	return n * (n - 1);	
 }
 
 // Complete the solve function below.
-int solve(vector<int> arr) {
-    stack<int> st;
+long long solve(vector<long long> arr) {
+    stack<long long> st;
     st.push(arr[0]);
-    int ans = 0, sequence = 0, cur = 0;
+    long long ans = 0, sequence = 0, cur = 0;
 
-    for (int i = 1; i < arr.size(); ++i) {
+    for (long long i = 1; i < arr.size(); ++i) {
         while (!st.empty() && arr[i] > st.top()) {
             cur = st.top();
             while (!st.empty() && st.top() == cur) {
@@ -44,15 +37,15 @@ int solve(vector<int> arr) {
 		sequence = 0;
     }
 
-    return ans << 1;
+    return ans;
 }
 
-int main()
+int  main()
 {
 #ifdef SUBMISSION
     ofstream fout(getenv("OUTPUT_PATH"));
 #endif
-    int arr_count;
+    long long arr_count;
     cin >> arr_count;
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
@@ -61,15 +54,15 @@ int main()
 
     vector<string> arr_temp = split_string(arr_temp_temp);
 
-    vector<int> arr(arr_count);
+    vector<long long> arr(arr_count);
 
-    for (int arr_itr = 0; arr_itr < arr_count; arr_itr++) {
-        int arr_item = stoi(arr_temp[arr_itr]);
+    for (long long arr_itr = 0; arr_itr < arr_count; arr_itr++) {
+        long long arr_item = stoi(arr_temp[arr_itr]);
 
         arr[arr_itr] = arr_item;
     }
 
-    int result = solve(arr);
+    long long result = solve(arr);
 
 #ifdef SUBMISSION
     fout << result << "\n";
