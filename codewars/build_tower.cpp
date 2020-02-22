@@ -1,24 +1,19 @@
 typedef std::string str;
 typedef std::vector<str> vecs;
 
+#define pb push_back
+
 class Kata
 {
 public:
     vecs towerBuilder(int n)
     {
-      vecs res;
-      int size = n * 2 - 1;
-      for (int stars_start = n - 1; stars_start >= 0; --stars_start) {
-        str temp(size, ' ');
-        
-        for (int j = stars_start; j < n; ++j) {
-          temp[j] = '*';
-          temp[size - j - 1] = '*';
-        }
-        
-        res.push_back(temp);
+      vecs tower;
+      for (int start = n - 1; start >= 0; --start) {
+        str empty(start, ' ');
+        tower.pb(empty + str((n - start) * 2 - 1, '*') + empty);
       }
       
-      return res;
+      return tower;
     }
 };
