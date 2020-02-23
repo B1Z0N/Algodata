@@ -1,0 +1,19 @@
+class Solution {
+public:
+    int climbStairs(int n) {
+        std::map<int, int> cache {
+            {1, 1}, {2, 2}
+        };
+        return climbStairs(n, cache);
+    }
+    
+    int climbStairs(int n, std::map<int, int>& cache) {
+        auto search = cache.find(n);
+        if (search != cache.end()) return search->second;
+        else {
+            int res = climbStairs(n - 1, cache) + climbStairs(n - 2, cache);
+            cache[n] = res;
+            return res;
+        }
+    }
+};
