@@ -1,11 +1,11 @@
 typedef std::vector<int> vi;
-typedef std::map<int, int> mii;
+typedef std::unordered_map<int, int> umii;
 
 using namespace std;
 
 vi deleteNth(vi arr, int n)
 {
-  mii counter;
+  umii counter;
   vi res;
   copy_if(arr.begin(), arr.end(), 
   back_inserter(res),
