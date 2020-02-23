@@ -53,7 +53,7 @@ class Knapsack
 	size_t capacity;
 	std::vector<size_t> values ;
 	std::vector<size_t> weights;
-	std::unordered_set<size_t> included;
+	std::vector<bool>  included;
 
 	bool calculated { false };
 	size_t result;
@@ -117,13 +117,35 @@ std::istream& operator>>( std::istream& is, Knapsack& knp )
 }	
 
 
+class DynamicCondition {
+	std::set<int> included;
+	std::size_t sum;
+public:
+
+	DynamicCondition(std::set<int> included_, int sum_ = -1) 
+		:included{included_}, sum{sum_}
+	{
+		if (sum == -1) 
+			sum = std::accumulate(std::begin(included), std::end(included), 0);
+	}
+
+	DynamicCondition &operator+=(const DynamicCondition& other) {
+		included.insert(other.included.begin(), other.included.end());	
+		sum = std::accumulate(std::begin(included), std::end(included), 0); 
+		return *this;
+	}
+	
+	std::set<int> get_included() { return included; }
+	std::size_t get_sum() { return sum };
+};
+
 /**
  * Algorithm implementation
  */
 std::size_t Knapsack::solve()
 {
 	std::size_t size { values.size( ) };
-	std::size_t remember[ size + 1 ][ capacity + 1 ];
+	DynamicCondition remember[ size + 1 ][ capacity + 1 ];
 	/**
 	 * A row number i represents the set of all the items 
 	 * from rows 1 to i. For instance, the values in row 3 assumes 
@@ -145,7 +167,7 @@ std::size_t Knapsack::solve()
 		{
 			if( i == 0 || w == 0 )
 				// base case 
-				remember[ i ][ w ] = 0;
+				remember[ i ][ w ] = ;
 			else if( weights[ i - 1 ] <= w )
 			{
 				int with = values[ i - 1 ] + remember[ i - 1 ][ w - weights[ i - 1 ] ];
