@@ -23,6 +23,8 @@ struct limits {
 class Solution {
 public:
     bool searchMatrix(vvi& matrix, int target) {
+		if (!matrix.size() || !matrix[0].size()) return false;
+
         auto lims = findLimits(matrix, target);
         if (lims.contains(matrix, target)) return true;
         
