@@ -3,7 +3,12 @@
 using namespace std;
 
 vector<double> solution(const vector<int>& arr, int k) {
-	vector<double> res;
+    vector<double> res;
+    if (k == 1) {
+    	copy(arr.begin(), arr.end(), back_inserter(res));
+    	return res;
+    }
+        
 	multiset<int> ms;
 
 	for (int i = 0; i < k - 1; ++i) ms.insert(arr[i]);
@@ -12,7 +17,10 @@ vector<double> solution(const vector<int>& arr, int k) {
 		ms.insert(arr[i]);
 
 		auto it = next(ms.begin(), k / 2 - 1);
-		res.push_back(k % 2 ? *next(it) : 0.5 * (*it + *next(it)));
+		res.push_back(
+    	// 0.5 for overflow prevention
+    	k % 2 ? *next(it) : (0.5 * *it) + (0.5 * *next(it))
+    	);
 
 		ms.erase(ms.lower_bound(arr[i - k + 1]));	
 	}	
