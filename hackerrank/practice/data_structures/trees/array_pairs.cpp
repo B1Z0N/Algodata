@@ -11,6 +11,8 @@ long solve(vector<int>& arr,  const vit& l, const vit& r) {
 	vit maxel {max_element(l, r)};
 	long answ = solve(arr, l, maxel) + solve(arr, next(maxel), r);
 	
+	// calculate pairs on each of subarrays
+	// assuming maxel is maximal element
 	for (auto itl = l; itl != maxel; ++itl) {
 		for (auto itr = next(maxel); itr != r; ++itr) {
 			long long a = *itl, b = *itr;
@@ -18,7 +20,8 @@ long solve(vector<int>& arr,  const vit& l, const vit& r) {
 			else break;		
 		}
 	}
-	
+
+	// calculate the number of pairs that include maxel
 	for (auto itone = l; *itone == 1 && itone != maxel; ++itone) ++answ;
 	for (auto itone = next(maxel); *itone == 1 && itone != r; ++itone) ++answ;
 
