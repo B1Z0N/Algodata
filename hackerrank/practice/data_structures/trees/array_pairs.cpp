@@ -8,22 +8,19 @@ typedef vector<int>::iterator vit;
 
 long solve(vector<int>& arr,  const vit& l, const vit& r) {
 	if (distance(l, r) <= 1) return 0;
-	vit maxel {max_element(l, r)};
-	long answ = solve(arr, l, maxel) + solve(arr, next(maxel), r);
+	vit maxel {max_element(l, r)}, nmaxel {next(maxel)};
+	long answ = solve(arr, l, maxel) + solve(arr, nmaxel, r);
 	
 	// calculate pairs on each of subarrays
 	// assuming maxel is maximal element
 	for (auto itl = l; itl != maxel; ++itl) {
-		for (auto itr = next(maxel); itr != r; ++itr) {
-			long long a = *itl, b = *itr;
-			if (a * b <= *maxel) ++answ;
-			else break;		
-		}
+		auto itr = upper_bound(nmaxel, r, *maxel / *itl);
+		answ += distance(nmaxel, itr);	
 	}
 
 	// calculate the number of pairs that include maxel
-	for (auto itone = l; *itone == 1 && itone != maxel; ++itone) ++answ;
-	for (auto itone = next(maxel); *itone == 1 && itone != r; ++itone) ++answ;
+	answ += distance(l, upper_bound(l, maxel, 1));
+	answ += distance(nmaxel, upper_bound(nmaxel, r, 1));
 
 	inplace_merge(l, next(maxel), r);
 	return answ;
