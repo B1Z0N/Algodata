@@ -4,58 +4,30 @@ using namespace std;
 
 vector<string> split_string(string);
 
-class MaxRangeTree {
-protected:
-    static std::vector<int> max_tree(const std::vector<int> vec) {
-        int size = vec.size();
-        std::vector<int> res (size - 1);
-        std::copy(vec.cbegin(), vec.cend(), std::back_inserter(res));
-        for (int i = size - 1; i >= 1; --i) 
-            res[i - 1] = max(res[left(i) - 1], res[right(i) - 1]);
+typedef vector<int>::iterator vit;
 
-        return res;
-    }
-    
-    static inline int parent(int i) { return i / 2; }
-    static inline int left(int i) { return 2 * i; }
-    static inline int right(int i) { return 2 * i + 1; }
+long solve(vector<int>& arr,  const vit& l, const vit& r) {
+	if (distance(l, r) <= 1) return 0;
+	vit maxel {max_element(l, r)};
+	long answ = solve(arr, l, maxel) + solve(arr, next(maxel), r);
+	
+	for (auto itl = l; itl != maxel; ++itl) {
+		for (auto itr = next(maxel); itr != r; ++itr) {
+			long long a = *itl, b = *itr;
+			if (a * b <= *maxel) ++answ;
+			else break;		
+		}
+	}
+	
+	for (auto itone = l; *itone == 1 && itone != maxel; ++itone) ++answ;
+	for (auto itone = next(maxel); *itone == 1 && itone != r; ++itone) ++answ;
 
-    vector<int> tree;
-    size_t n;
-public:
-    MaxRangeTree(const vector<int>& arr) :tree{max_tree(arr)}, n{arr.size()} {}
-
-    // range starting from zero
-    int get_max(int a, int b) {
-        a += n; b += n;
-        int res = INT_MIN;
-        while (a <= b) {
-            if (a % 2 == 1 /* right */) res = max(res, tree[a++ - 1]);
-            if (b % 2 == 0 /* left  */) res = max(res, tree[b-- - 1]);
-            
-            a = parent(a); b = parent(b);
-        }
-
-        return res;
-    }
-};
-
-
+	inplace_merge(l, next(maxel), r);
+	return answ;
+}
 // Complete the solve function below.
 long solve(vector<int> arr) {
-    // O(n)
-    MaxRangeTree mrt {arr};
-    int n = arr.size();
-    long long cnt = 0;
-    // O(n^2 * log(n))
-    for (int i = 0; i < n - 1; ++i) {
-        for (int j = i + 1; j < n; ++j) {
-            long long a = arr[i], b = arr[j], c = mrt.get_max(i, j);
-            cnt += a * b <= c;
-        }
-    }
-
-    return cnt;
+	return solve(arr, arr.begin(), arr.end());
 }
 
 int main()
@@ -82,6 +54,7 @@ int main()
     long result = solve(arr);
 
     fout << result << "\n";
+    cout << result << "\n";
 
     fout.close();
 
